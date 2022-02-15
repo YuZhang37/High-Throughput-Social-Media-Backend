@@ -13,9 +13,20 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from pprint import pprint
+
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+
+admin.site.site_header = 'Twitter Admin'
+# The text to put at the top of the admin index page (a string).
+# By default, this is “Site administration”.
+admin.site.index_title = 'Admin'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api-auth/', include('rest_framework.urls')),
+    path('core/', include('core.urls')),
+    path('playground/', include('playground.urls')),
+
 ]
