@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+{% if name %}
+    <h1>hello, {{ name }}</h1>
+{% else %}
+    <h1>hello, world</h1>
+{% endif %}
+{{ value }}
+{#        <ul>#}
+{#            {% for order in orders %}#}
+{#                <li>#}
+{#                    {{ order.id }} - {{ order.customer.first_name }} - {{ order.placed_at }}#}
+{#                </li>#}
+{#            {% endfor %}#}
+{#            #}
+{#        </ul>#}
+{#            <ul>#}
+{#                {% for customer in customers %}#}
+{#                    <li>#}
+{#                        {{ customer.id }} - {{ customer.first_name }} - {{ customer.membership }}#}
+{#                    </li>#}
+{#                {% endfor %}#}
+{##}
+{#            </ul>#}
+
+</body>
+</html>
