@@ -58,17 +58,17 @@ class AccountViewSet(viewsets.GenericViewSet):
         username = serializer.validated_data['username']
         password = serializer.validated_data['password']
         user = django_authenticate(username=username, password=password)
-        if user is not None:
+        if user is None:
+            return Response({
+                "success": False,
+                "message": "Username and password does not match."
+            }, status=status.HTTP_400_BAD_REQUEST)
+        else:
             django_login(request, user)
             return Response({
                 'success': True,
                 'user': SimpleUserSerializer(user).data,
             }, status=status.HTTP_200_OK)
-        else:
-            return Response({
-                "success": False,
-                "message": "Username and password does not match."
-            })
 
     @action(methods=['POST', ], detail=False,
             serializer_class=UserSerializerForSignup)
@@ -85,6 +85,6 @@ class AccountViewSet(viewsets.GenericViewSet):
         return Response({
             'success': True,
             'user': SimpleUserSerializer(user).data
-        }, status=status.HTTP_200_OK)
+        }, status=status.HTTP_201_CREATED)
 
 
