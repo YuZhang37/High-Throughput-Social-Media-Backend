@@ -5,9 +5,11 @@ from tweets.models import Tweet
 
 class TestCase(DjangoTestCase):
 
-    def create_user(self, username, email, password=None):
+    def create_user(self, username, email=None, password=None):
         if password is None:
             password = 'generic password'
+        if email is None:
+            email = f'{username}@mytwitter.com'
         # 不能写成 User.objects.create()
         # 因为 password 需要被加密, username 和 email 需要进行一些 normalize 处理
         return get_user_model().objects.create_user(username, email, password)
