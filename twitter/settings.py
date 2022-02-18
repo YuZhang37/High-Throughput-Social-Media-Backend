@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'core',
     'playground',
     'tweets',
+    'friendships',
 ]
 
 MIDDLEWARE = [

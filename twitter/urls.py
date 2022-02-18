@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
+from friendships.api.views import FriendshipViewSet
 from tweets.api.views import TweetViewSet
 
 admin.site.site_header = 'Twitter Admin'
@@ -28,6 +29,7 @@ admin.site.index_title = 'Admin'
 
 router = routers.DefaultRouter()
 router.register('tweets', TweetViewSet, basename='tweet')
+router.register('friendships', FriendshipViewSet, basename='friendship')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
