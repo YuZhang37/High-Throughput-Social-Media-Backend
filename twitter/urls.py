@@ -17,16 +17,23 @@ from pprint import pprint
 
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+
+from tweets.api.views import TweetViewSet
 
 admin.site.site_header = 'Twitter Admin'
 # The text to put at the top of the admin index page (a string).
 # By default, this is “Site administration”.
 admin.site.index_title = 'Admin'
 
+router = routers.DefaultRouter()
+router.register('tweets', TweetViewSet, basename='tweet')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('core/', include('core.urls')),
     path('playground/', include('playground.urls')),
+    path('api/', include(router.urls)),
 
 ]

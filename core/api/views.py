@@ -58,6 +58,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         username = serializer.validated_data['username']
         password = serializer.validated_data['password']
         user = django_authenticate(username=username, password=password)
+        # user = User.objects.get(username=username)
         if user is None:
             return Response({
                 "success": False,
@@ -82,6 +83,7 @@ class AccountViewSet(viewsets.GenericViewSet):
                 'errors': serializer.errors,
             }, status=status.HTTP_400_BAD_REQUEST)
         user = serializer.save()
+        django_login(request, user)
         return Response({
             'success': True,
             'user': SimpleUserSerializer(user).data
