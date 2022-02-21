@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # third party apps
     'rest_framework',
     'debug_toolbar',
+    'django_filters',
 
     # project apps
     'core',
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
     'tweets',
     'friendships',
     'newsfeeds',
+    'comments',
 ]
 
 MIDDLEWARE = [
@@ -144,7 +146,10 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
 }
 
 AUTH_USER_MODEL = 'core.User'
