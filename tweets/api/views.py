@@ -9,9 +9,10 @@ from newsfeeds.services import NewsFeedServices
 from tweets.api.serializers import (
     TweetSerializerForCreate,
     TweetSerializerForList,
-    TweetSerializerForCreateResponse
+    TweetSerializerForCreateResponse, TweetSerializerForRetrieve
 )
 from tweets.models import Tweet
+from utils.decorators import required_params
 
 
 class TweetViewSet(GenericViewSet):
@@ -20,16 +21,12 @@ class TweetViewSet(GenericViewSet):
     serializer_class = TweetSerializerForCreate
 
     def get_permissions(self):
-        if self.action == 'list':
-            return [AllowAny()]
-        else:
+        if self.action == 'create':
             return [IsAuthenticated()]
+        return [AllowAny()]
 
+    @required_params(params=['user_id'])
     def list(self, request: Request):
-        if 'user_id' not in request.query_params:
-            return Response({
-                "message": "missing user_id",
-            }, status=status.HTTP_400_BAD_REQUEST)
         user_id = request.query_params['user_id']
         if not get_user_model().objects.filter(id=user_id).exists():
             return Response({
@@ -58,3 +55,10 @@ class TweetViewSet(GenericViewSet):
             TweetSerializerForCreateResponse(tweet).data,
             status=status.HTTP_201_CREATED
         )
+
+    def retrieve(self, request: Request, pk):
+        tweet = self.get_object()
+        serializer = TweetSerializerForRetrieve(tweet)
+        return Response({
+            "tweet": serializer.data,
+        }, status=status.HTTP_200_OK)

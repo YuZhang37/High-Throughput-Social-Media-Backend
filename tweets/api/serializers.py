@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from comments.api.serializers import CommentSerializer
 from tweets.models import Tweet
 
 
@@ -46,3 +47,12 @@ class TweetSerializerForCreateResponse(serializers.ModelSerializer):
     class Meta:
         model = Tweet
         fields = ['id', 'user', 'created_at', 'content']
+
+
+class TweetSerializerForRetrieve(serializers.ModelSerializer):
+    user = UserSerializerForTweetList()
+    comments = CommentSerializer(source='comment_set', many=True)
+
+    class Meta:
+        model = Tweet
+        fields = ['id', 'user', 'comments', 'created_at', 'content']

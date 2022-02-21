@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
+from comments.api.views import CommentViewSet
 from friendships.api.views import FriendshipViewSet
 from newsfeeds.api.views import NewsFeedViewSet
 from tweets.api.views import TweetViewSet
@@ -32,6 +33,7 @@ router = routers.DefaultRouter()
 router.register('tweets', TweetViewSet, basename='tweet')
 router.register('friendships', FriendshipViewSet, basename='friendship')
 router.register('newsfeeds', NewsFeedViewSet, basename='newsfeed')
+router.register('comments', CommentViewSet, basename='comment')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
