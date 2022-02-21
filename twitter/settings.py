@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,6 +26,12 @@ SECRET_KEY = 'django-insecure-5cznl)w6m^es!_3xr3et&++i$j4it7)u+a$rv8m##6g&rw1_0-
 DEBUG = True
 
 ALLOWED_HOSTS = []
+INTERNAL_IPS = [
+    # ...
+    "10.0.2.2",
+    # "192.168.56.1",
+    # ...
+]
 
 # Application definition
 
@@ -38,12 +45,14 @@ INSTALLED_APPS = [
 
     # third party apps
     'rest_framework',
+    'debug_toolbar',
 
     # project apps
     'core',
     'playground',
     'tweets',
     'friendships',
+    'newsfeeds',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'twitter.urls'

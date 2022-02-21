@@ -11,8 +11,6 @@ TWEET_CREATE_API = '/api/tweets/'
 class TweetApiTests(TestCase):
 
     def setUp(self):
-        self.anonymous_client = APIClient()
-
         self.user1 = self.create_user('user1', 'user1@mytwitter.com')
         self.tweets1 = [
             self.create_tweet(self.user1)
@@ -67,3 +65,4 @@ class TweetApiTests(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['user']['id'], self.user1.id)
         self.assertEqual(Tweet.objects.count(), tweets_count + 1)
+
