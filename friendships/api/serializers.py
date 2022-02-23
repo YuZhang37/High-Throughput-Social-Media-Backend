@@ -1,6 +1,6 @@
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from core.api.serializers import SimpleUserSerializerWithEmail
 from friendships.models import Friendship
 
 
@@ -10,14 +10,8 @@ class EmptyFriendshipSerializer(serializers.ModelSerializer):
         fields = []
 
 
-class UserSerializerForFriendship(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ['id', 'username', 'email']
-
-
 class FriendshipSerializerForFollowers(serializers.ModelSerializer):
-    user = UserSerializerForFriendship(source='from_user')
+    user = SimpleUserSerializerWithEmail(source='from_user')
 
     class Meta:
         model = Friendship
@@ -25,7 +19,7 @@ class FriendshipSerializerForFollowers(serializers.ModelSerializer):
 
 
 class FriendshipSerializerForFollowings(serializers.ModelSerializer):
-    user = UserSerializerForFriendship(source='to_user')
+    user = SimpleUserSerializerWithEmail(source='to_user')
 
     class Meta:
         model = Friendship

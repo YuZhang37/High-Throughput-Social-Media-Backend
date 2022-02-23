@@ -39,7 +39,10 @@ class CommentViewSet(viewsets.GenericViewSet):
         comment = serializer.save()
         return Response({
             "success": True,
-            "comment": CommentSerializer(comment).data,
+            "comment": CommentSerializer(
+                instance=comment,
+                context={'request': request},
+            ).data,
         }, status=status.HTTP_201_CREATED)
 
     def update(self, request: Request, pk):
@@ -55,7 +58,10 @@ class CommentViewSet(viewsets.GenericViewSet):
         comment = serializer.save()
         return Response({
             "success": True,
-            "data": CommentSerializer(comment).data,
+            "data": CommentSerializer(
+                instance=comment,
+                context={'request': request},
+            ).data,
         }, status=status.HTTP_200_OK)
 
     def destroy(self, request: Request, pk):
@@ -70,7 +76,11 @@ class CommentViewSet(viewsets.GenericViewSet):
         # tweet_id = request.query_params['tweet_id']
         # comments = self.queryset.filter(tweet=tweet_id).order_by("created_at")
         comments = self.filter_queryset(self.queryset).order_by('created_at')
-        serializer = CommentSerializer(comments, many=True)
+        serializer = CommentSerializer(
+            instance=comments,
+            many=True,
+            context={'request': request},
+        )
         return Response({
             "comments": serializer.data,
         }, status=status.HTTP_200_OK)

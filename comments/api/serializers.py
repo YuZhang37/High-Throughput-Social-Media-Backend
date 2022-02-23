@@ -1,7 +1,9 @@
-from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
-
 from comments.models import Comment
+from core.api.serializers import SimpleUserSerializer
+from likes.models import Like
+from likes.services import LikeService
 from tweets.models import Tweet
 
 
@@ -38,15 +40,34 @@ class CommentSerializerForUpdate(serializers.ModelSerializer):
         return instance
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ['id', 'username']
-
-
 class CommentSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = SimpleUserSerializer()
+    has_liked = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ['id', 'tweet_id', 'user', 'content', 'created_at']
+        fields = [
+            'id',
+            'tweet_id',
+            'user',
+            'content',
+            'created_at',
+            'has_liked',
+            'likes_count',
+        ]
+
+    def get_likes_count(self, obj):
+        content_type = ContentType.objects.get_for_model(Comment)
+        count = Like.objects.filter(
+            content_type=content_type,
+            object_id=obj.id,
+        ).count()
+        return count
+
+    def get_has_liked(self, obj):
+        has_liked = LikeService.has_liked(
+            user=self.context['request'].user,
+            obj=obj,
+        )
+        return has_liked

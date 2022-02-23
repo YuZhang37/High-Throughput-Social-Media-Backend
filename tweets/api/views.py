@@ -8,9 +8,8 @@ from rest_framework.viewsets import GenericViewSet
 from newsfeeds.services import NewsFeedServices
 from tweets.api.serializers import (
     TweetSerializerForCreate,
-    TweetSerializerForList,
-    TweetSerializerForCreateResponse,
-    TweetSerializerForRetrieve,
+    TweetSerializerWithDetail,
+    TweetSerializer,
 )
 from tweets.models import Tweet
 from utils.decorators import required_params
@@ -34,7 +33,11 @@ class TweetViewSet(GenericViewSet):
                 "message": "user doesn't exist",
             }, status=status.HTTP_400_BAD_REQUEST)
         tweets = Tweet.objects.filter(user=user_id).order_by("-created_at")
-        serializer = TweetSerializerForList(tweets, many=True)
+        serializer = TweetSerializer(
+            tweets,
+            many=True,
+            context={'request': request}
+        )
         return Response({
             "tweets": serializer.data
         }, status=status.HTTP_200_OK)
@@ -53,13 +56,16 @@ class TweetViewSet(GenericViewSet):
         tweet = serializer.save()
         NewsFeedServices.fan_out_to_followers(tweet)
         return Response(
-            TweetSerializerForCreateResponse(tweet).data,
+            TweetSerializer(tweet, context={'request': request}).data,
             status=status.HTTP_201_CREATED
         )
 
     def retrieve(self, request: Request, pk):
         tweet = self.get_object()
-        serializer = TweetSerializerForRetrieve(tweet)
+        serializer = TweetSerializerWithDetail(
+            tweet,
+            context={'request': request}
+        )
         return Response({
             "tweet": serializer.data,
         }, status=status.HTTP_200_OK)

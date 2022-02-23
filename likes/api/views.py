@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from likes.API.serializers import LikeSerializerForCreate, LikeSerializer, LikeSerializerForCancel
+from likes.api.serializers import LikeSerializerForCreate, LikeSerializer, LikeSerializerForCancel
 from likes.models import Like
 from utils.decorators import required_params
 
