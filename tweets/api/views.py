@@ -9,7 +9,8 @@ from newsfeeds.services import NewsFeedServices
 from tweets.api.serializers import (
     TweetSerializerForCreate,
     TweetSerializerForList,
-    TweetSerializerForCreateResponse, TweetSerializerForRetrieve
+    TweetSerializerForCreateResponse,
+    TweetSerializerForRetrieve,
 )
 from tweets.models import Tweet
 from utils.decorators import required_params
