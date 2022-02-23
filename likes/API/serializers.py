@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
 from comments.models import Comment
+from core.api.serializers import SimpleUserSerializer
 from likes.models import Like
 from tweets.models import Tweet
 
@@ -59,14 +60,8 @@ class LikeSerializerForCancel(BaseLikeSerializerForCreateAndCancel):
         return deleted
 
 
-class UserSerializerForLike(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ['id', 'username']
-
-
 class LikeSerializer(serializers.ModelSerializer):
-    user = UserSerializerForLike()
+    user = SimpleUserSerializer()
 
     class Meta:
         model = Like

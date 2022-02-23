@@ -3,10 +3,10 @@ from rest_framework.test import APIClient
 
 from core.models import User
 
-LOGIN_URL = '/core/accounts/login/'
-LOGOUT_URL = '/core/accounts/logout/'
-SIGNUP_URL = '/core/accounts/signup/'
-LOGIN_STATUS_URL = '/core/accounts/login_status/'
+LOGIN_URL = '/api/accounts/login/'
+LOGOUT_URL = '/api/accounts/logout/'
+SIGNUP_URL = '/api/accounts/signup/'
+LOGIN_STATUS_URL = '/api/accounts/login_status/'
 
 
 class AccountApiTests(TestCase):

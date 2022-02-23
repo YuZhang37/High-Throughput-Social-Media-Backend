@@ -6,20 +6,17 @@ from django.contrib.auth import (
 
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import viewsets
 
-from core.api.serializers import UserSerializer, SimpleUserSerializer, UserSerializerForLogin, UserSerializerForSignup
+from core.api.serializers import (
+    UserSerializer,
+    UserSerializerForLogin,
+    UserSerializerForSignup
+)
 from core.models import User
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-
 
 # class AccountViewSet(viewsets.ViewSet):
 # don't find official document for ViewSet to set serializer_class
@@ -28,14 +25,14 @@ class AccountViewSet(viewsets.GenericViewSet):
     # the default permission is set in settings.
     permission_classes = (AllowAny,)
     queryset = User.objects.all()
-    serializer_class = SimpleUserSerializer
+    serializer_class = UserSerializer
 
     @action(methods=['GET', ], detail=False)
     def login_status(self, request: Request):
         has_logged_in = request.user.is_authenticated
         data = {'has_logged_in': has_logged_in}
         if has_logged_in:
-            user_data = SimpleUserSerializer(request.user).data
+            user_data = UserSerializer(request.user).data
             data['user'] = user_data
         return Response(data, status=status.HTTP_200_OK)
 
@@ -68,7 +65,7 @@ class AccountViewSet(viewsets.GenericViewSet):
             django_login(request, user)
             return Response({
                 'success': True,
-                'user': SimpleUserSerializer(user).data,
+                'user': UserSerializer(user).data,
             }, status=status.HTTP_200_OK)
 
     @action(methods=['POST', ], detail=False,
@@ -86,7 +83,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         django_login(request, user)
         return Response({
             'success': True,
-            'user': SimpleUserSerializer(user).data
+            'user': UserSerializer(user).data
         }, status=status.HTTP_201_CREATED)
 
 

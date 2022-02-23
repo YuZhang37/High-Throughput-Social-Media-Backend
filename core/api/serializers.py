@@ -3,29 +3,38 @@ from rest_framework import serializers
 from core.models import User
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = User
-        fields = ['url', 'id', 'username', 'first_name',
-                  'last_name', 'email', 'password']
-
-
-class SimpleUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
 
-class UserSerializerForLogin(serializers.Serializer):
+class SimpleUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username']
+
+
+class SimpleUserSerializerWithEmail(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
+
+
+class UserSerializerForLogin(serializers.ModelSerializer):
     username = serializers.CharField()
     password = serializers.CharField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'password']
 
     def validate_username(self, username):
         username = username.lower()
         if not User.objects.filter(username=username).exists():
-            raise serializers.ValidationError({
-                "username": "User doesn't exist.",
-            })
+            raise serializers.ValidationError(
+                "User doesn't exist.",
+            )
         return username
 
 

@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from comments.api.serializers import CommentSerializer
+from core.api.serializers import SimpleUserSerializerWithEmail
 from tweets.models import Tweet
 
 
@@ -21,36 +22,18 @@ class TweetSerializerForCreate(serializers.ModelSerializer):
         return tweet
 
 
-class UserSerializerForTweetList(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ['id', 'username']
-
-
-class TweetSerializerForList(serializers.ModelSerializer):
-    user = UserSerializerForTweetList()
+# clean tweet information only from itself
+class TweetSerializer(serializers.ModelSerializer):
+    user = SimpleUserSerializerWithEmail()
 
     class Meta:
         model = Tweet
-        fields = ['id', 'user', 'created_at', 'content']
+        fields = ['id', 'user',  'created_at', 'content']
 
 
-class UserSerializerForTweetCreateResponse(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ['id', 'username', 'email']
-
-
-class TweetSerializerForCreateResponse(serializers.ModelSerializer):
-    user = UserSerializerForTweetCreateResponse()
-
-    class Meta:
-        model = Tweet
-        fields = ['id', 'user', 'created_at', 'content']
-
-
-class TweetSerializerForRetrieve(serializers.ModelSerializer):
-    user = UserSerializerForTweetList()
+# tweet information with likes and comments
+class TweetSerializerWithDetail(serializers.ModelSerializer):
+    user = SimpleUserSerializerWithEmail()
     comments = CommentSerializer(source='comment_set', many=True)
 
     class Meta:
