@@ -4,6 +4,9 @@ from newsfeeds.models import NewsFeed
 from tweets.api.serializers import TweetSerializer
 
 
+# https://stackoverflow.com/questions/37722415/
+# django-rest-framework-access-context-from-nested-serializer
+# not found any official reference on how nested serializer works
 class NewsFeedSerializer(serializers.ModelSerializer):
     tweet = TweetSerializer()
 

@@ -49,7 +49,7 @@ class TweetApiTests(TestCase):
         response = self.user1_client.post(TWEET_CREATE_API)
         self.assertEqual(response.status_code, 400)
         # content 不能太短
-        response = self.user1_client.post(TWEET_CREATE_API, {'content': '1'})
+        response = self.user1_client.post(TWEET_CREATE_API, {'content': ''})
         self.assertEqual(response.status_code, 400)
         # content 不能太长
         response = self.user1_client.post(TWEET_CREATE_API, {

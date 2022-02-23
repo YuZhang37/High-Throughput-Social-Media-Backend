@@ -22,7 +22,7 @@ from rest_framework import routers
 from comments.api.views import CommentViewSet
 from core.api.views import AccountViewSet
 from friendships.api.views import FriendshipViewSet
-from likes.API.views import LikeViewSet
+from likes.api.views import LikeViewSet
 from newsfeeds.api.views import NewsFeedViewSet
 from tweets.api.views import TweetViewSet
 
