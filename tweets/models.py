@@ -1,6 +1,8 @@
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
+from likes.models import Like
 from utils.time_helpers import utc_now
 
 
@@ -22,6 +24,16 @@ class Tweet(models.Model):
     @property
     def hours_to_now(self):
         return (utc_now() - self.created_at).seconds // 3600
+
+    @property
+    def like_set(self):
+        content_type = ContentType.objects.get_for_model(Tweet)
+        object_id = self.id
+        likes = Like.objects.filter(
+            content_type=content_type,
+            object_id=object_id
+        ).order_by('-created_at')
+        return likes
 
     def __str__(self):
         return f'{self.user} {self.created_at} {self.content}'
