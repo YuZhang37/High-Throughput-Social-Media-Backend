@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from inbox.services import NotificationService
 from likes.api.serializers import LikeSerializerForCreate, LikeSerializer, LikeSerializerForCancel
 from likes.models import Like
 from utils.decorators import required_params
@@ -33,6 +34,8 @@ class LikeViewSet(viewsets.GenericViewSet):
             }, status=status.HTTP_201_CREATED)
 
         like = serializer.save()
+        NotificationService.send_like_notification(like)
+
         return Response({
             "success": True,
             "like": LikeSerializer(like).data,
@@ -41,7 +44,7 @@ class LikeViewSet(viewsets.GenericViewSet):
     # I choose this implementation because I want to return duplicated information
 
     @action(methods=['POST'], detail=False)
-    @required_params(request_attr='data', params=['content_type', 'object_id'])
+    @required_params(method='POST', params=['content_type', 'object_id'])
     def cancel(self, request):
         serializer = LikeSerializerForCancel(
             data=request.data,

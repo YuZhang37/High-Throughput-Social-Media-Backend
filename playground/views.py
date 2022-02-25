@@ -1,5 +1,7 @@
 from django.shortcuts import render
 
+from likes.models import Like
+
 
 def calculate():
     x = 1
@@ -8,9 +10,9 @@ def calculate():
 
 
 def say_hello(request):
-    # return HttpResponse('hello, world')
-    # return render(request, 'hello.html')
-    x = 1
-    y = 2
-    z = calculate()
-    return render(request, 'playground/hello.html', {'name': 'Marvin', 'value': z})
+    like = Like.objects.all().first()
+    model_name = like.content_type.model
+    print(model_name)
+    print(model_name == 'comment')
+    print(model_name == 'tweet')
+    return render(request, 'playground/hello.html', {'name': 'Marvin', 'value': 0})
