@@ -18,3 +18,5 @@ class UserAdmin(DjangoUserAdmin):
     )
     list_display = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff']
     search_fields = ('first_name', 'last_name')
+
+

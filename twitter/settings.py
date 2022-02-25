@@ -56,6 +56,10 @@ INSTALLED_APPS = [
     'newsfeeds',
     'comments',
     'likes',
+
+    # third party apps
+    'notifications',
+
 ]
 
 MIDDLEWARE = [

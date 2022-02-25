@@ -4,7 +4,12 @@ from rest_framework import status
 from rest_framework.response import Response
 
 
-def required_params(request_attr='query_params', params=None):
+def required_params(method='GET', params=None):
+
+    if method.lower() == 'get':
+        request_attr = 'query_params'
+    else:
+        request_attr = 'data'
 
     if params is None:
         params = []

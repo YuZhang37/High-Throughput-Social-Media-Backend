@@ -15,7 +15,9 @@ Including another URLconf
 """
 from pprint import pprint
 
+import notifications
 from django.contrib import admin
+from django.template.defaulttags import url
 from django.urls import path, include
 from rest_framework import routers
 
@@ -25,6 +27,7 @@ from friendships.api.views import FriendshipViewSet
 from likes.api.views import LikeViewSet
 from newsfeeds.api.views import NewsFeedViewSet
 from tweets.api.views import TweetViewSet
+from notifications import urls
 
 admin.site.site_header = 'Twitter Admin'
 # The text to put at the top of the admin index page (a string).
@@ -45,5 +48,8 @@ urlpatterns = [
     path('__debug__/', include('debug_toolbar.urls')),
     path('playground/', include('playground.urls')),
     path('api/', include(router.urls)),
-
+    path(
+        'notifications/',
+        include(notifications.urls, namespace='notifications')
+    ),
 ]
