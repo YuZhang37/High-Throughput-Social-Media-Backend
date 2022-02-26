@@ -18,6 +18,7 @@ from core.api.serializers import (
 )
 from core.models import User
 
+
 # class AccountViewSet(viewsets.ViewSet):
 # don't find official document for ViewSet to set serializer_class
 class AccountViewSet(viewsets.GenericViewSet):
@@ -80,6 +81,7 @@ class AccountViewSet(viewsets.GenericViewSet):
                 'errors': serializer.errors,
             }, status=status.HTTP_400_BAD_REQUEST)
         user = serializer.save()
+        user.get_or_create_userprofile
         django_login(request, user)
         return Response({
             'success': True,
