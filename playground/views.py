@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework import viewsets
 
 from likes.models import Like
 
@@ -16,3 +17,7 @@ def say_hello(request):
     print(model_name == 'comment')
     print(model_name == 'tweet')
     return render(request, 'playground/hello.html', {'name': 'Marvin', 'value': 0})
+
+
+class PlayViewSet(viewsets.ModelViewSet):
+    pass
