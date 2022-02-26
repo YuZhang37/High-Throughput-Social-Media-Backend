@@ -132,3 +132,5 @@ dmypy.json
 .idea/
 .vagrant/
 .DS_Store
+
+media/
