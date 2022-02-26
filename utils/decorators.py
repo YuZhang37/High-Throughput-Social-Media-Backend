@@ -17,7 +17,7 @@ def required_params(method='GET', params=None):
     def decorator(view_func):
 
         @wraps(view_func)
-        def wrapped_view(instance, request):
+        def wrapped_view(instance, request, *args, **kwargs):
             data = getattr(request, request_attr)
             missing_params = [
                 param
@@ -30,6 +30,6 @@ def required_params(method='GET', params=None):
                     "success": False,
                     "message": f'{params_str} are missing.'
                 }, status=status.HTTP_400_BAD_REQUEST)
-            return view_func(instance, request)
+            return view_func(instance, request, *args, **kwargs)
         return wrapped_view
     return decorator

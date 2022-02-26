@@ -24,6 +24,7 @@ from rest_framework import routers
 from comments.api.views import CommentViewSet
 from core.api.views import AccountViewSet
 from friendships.api.views import FriendshipViewSet
+from inbox.api.views import NotificationViewSet
 from likes.api.views import LikeViewSet
 from newsfeeds.api.views import NewsFeedViewSet
 from tweets.api.views import TweetViewSet
@@ -41,6 +42,7 @@ router.register('friendships', FriendshipViewSet, basename='friendship')
 router.register('newsfeeds', NewsFeedViewSet, basename='newsfeed')
 router.register('comments', CommentViewSet, basename='comment')
 router.register('likes', LikeViewSet, basename='like')
+router.register('notifications', NotificationViewSet, basename='notification')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
