@@ -85,3 +85,8 @@ class TweetApiTests(TestCase):
         self.assertEqual(len(response.data['tweet']['comments']), 2)
         first_user_id = response.data['tweet']['comments'][0]['user']['id']
         self.assertEqual(first_user_id, self.user2.id)
+
+        # tweet 里包含用户的头像和昵称
+        profile = self.user1.profile
+        self.assertEqual(response.data['tweet']['user']['nickname'], profile.nickname)
+        self.assertEqual(response.data['tweet']['user']['avatar_url'], None)

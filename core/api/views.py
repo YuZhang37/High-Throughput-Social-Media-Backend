@@ -4,9 +4,8 @@ from django.contrib.auth import (
     authenticate as django_authenticate,
 )
 
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import viewsets
@@ -14,9 +13,18 @@ from rest_framework import viewsets
 from core.api.serializers import (
     UserSerializer,
     UserSerializerForLogin,
-    UserSerializerForSignup
+    UserSerializerForSignup, UserProfileSerializerForUpdate
 )
-from core.models import User
+from core.models import User, UserProfile
+from utils.permissions import IsObjectOwner
+
+
+class UserViewSet(viewsets.GenericViewSet,
+                  viewsets.mixins.ListModelMixin,
+                  viewsets.mixins.RetrieveModelMixin,):
+    queryset = User.objects.all()
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    serializer_class = UserSerializer
 
 
 # class AccountViewSet(viewsets.ViewSet):
@@ -24,7 +32,7 @@ from core.models import User
 class AccountViewSet(viewsets.GenericViewSet):
 
     # the default permission is set in settings.
-    permission_classes = (AllowAny,)
+    permission_classes = [permissions.AllowAny,]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -81,11 +89,17 @@ class AccountViewSet(viewsets.GenericViewSet):
                 'errors': serializer.errors,
             }, status=status.HTTP_400_BAD_REQUEST)
         user = serializer.save()
-        user.get_or_create_userprofile
+        user.get_or_create_userprofile()
         django_login(request, user)
         return Response({
             'success': True,
             'user': UserSerializer(user).data
         }, status=status.HTTP_201_CREATED)
 
+
+class UserProfileViewSet(viewsets.GenericViewSet,
+                         viewsets.mixins.UpdateModelMixin):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializerForUpdate
+    permission_classes = [IsObjectOwner]
 

@@ -30,5 +30,11 @@ def get_or_create_userprofile(user):
     return userprofile, created
 
 
-User.get_or_create_userprofile = property(get_or_create_userprofile)
+def get_userprofile(user):
+    profile, _ = user.get_or_create_userprofile()
+    return profile
+
+
+User.get_or_create_userprofile = get_or_create_userprofile
+User.profile = property(get_userprofile)
 
