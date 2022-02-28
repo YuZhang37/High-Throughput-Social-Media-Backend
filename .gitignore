@@ -134,3 +134,4 @@ dmypy.json
 .DS_Store
 
 media/
+twitter/local_settings.py

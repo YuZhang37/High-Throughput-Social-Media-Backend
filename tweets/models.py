@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from likes.models import Like
+from tweets.constants import TWEET_PHOTO_DEFAULT_STATUS, TWEET_PHOTO_STATUS_CHOICES
 from utils.time_helpers import utc_now
 
 
@@ -37,3 +38,33 @@ class Tweet(models.Model):
 
     def __str__(self):
         return f'{self.user} {self.created_at} {self.content}'
+
+
+class TweetPhoto(models.Model):
+    tweet = models.ForeignKey(Tweet, on_delete=models.SET_NULL, null=True)
+    # redundant information, useful for querying related to users
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True
+    )
+    file = models.FileField(upload_to='tweetphotos/%Y/%m/%d/')
+    status = models.IntegerField(
+        default=TWEET_PHOTO_DEFAULT_STATUS,
+        choices=TWEET_PHOTO_STATUS_CHOICES,
+    )
+    order = models.IntegerField(default=0)
+    has_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        index_together = [
+            ['user', 'created_at'],
+            ['status', 'created_at'],
+            ['deleted_at', 'created_at'],
+        ]
+
+    def __str__(self):
+        return f'{self.user.id} - {self.tweet.id} - {self.file}'
+
+
+
