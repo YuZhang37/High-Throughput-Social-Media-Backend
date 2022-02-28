@@ -57,10 +57,13 @@ class TweetPhoto(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        # The first three indices are mostly used by the ones
+        # who checking the validation of user postings.
         index_together = [
             ['user', 'created_at'],
             ['status', 'created_at'],
-            ['deleted_at', 'created_at'],
+            ['has_deleted', 'created_at'],
+            ['tweet', 'order'],
         ]
 
     def __str__(self):
