@@ -15,6 +15,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
@@ -59,7 +60,6 @@ INSTALLED_APPS = [
     'newsfeeds',
     'comments',
     'likes',
-
 
 ]
 
@@ -168,19 +168,15 @@ TESTING = ((" ".join(sys.argv)).find('manage.py test') != -1)
 if TESTING:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-# AWS_S3_ACCESS_KEY_ID = os.environ.get("AWS_S3_ACCESS_KEY_ID")
-# AWS_S3_SECRET_ACCESS_KEY = os.environ.get("AWS_S3_SECRET_ACCESS_KEY")
-
-AWS_ACCESS_KEY_ID = "AKIAWLKAVPXMMOLFUCVF"
-AWS_SECRET_ACCESS_KEY = "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"
 
 AWS_S3_REGION_NAME = "us-east-2"
 AWS_STORAGE_BUCKET_NAME = "django-twitter-uzhang"
 
-# https://django-twitter-uzhang.s3.us-east-2.amazonaws.com/
-# userprofile/2022/02/27/dog.jpg
-# ?X-Amz-Algorithm=AWS4-HMAC-SHA256
-# &X-Amz-Credential=AKIAWLKAVPXMMOLFUCVF%2F20220227%2Fus-east-2%2Fs3%2Faws4_request
-# &X-Amz-Date=20220227T230008Z&X-Amz-Expires=3600
-# &X-Amz-SignedHeaders=host
-# &X-Amz-Signature=98c01633fa917a9e3e448901bc39cab73f36c0d636428de86037d0d93202d2f3
+
+try:
+    from twitter.local_settings import *
+except:
+    # print('from environment variables')
+    AWS_S3_ACCESS_KEY_ID = os.environ.get("AWS_S3_ACCESS_KEY_ID")
+    AWS_S3_SECRET_ACCESS_KEY = os.environ.get("AWS_S3_SECRET_ACCESS_KEY")
+
