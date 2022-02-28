@@ -9,11 +9,12 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-
-
+import os
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'django_filters',
     'notifications',
+    'storages',
 
     # project apps
     'core',
@@ -159,3 +161,26 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = 'core.User'
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# django/conf/global_settings.py
+TESTING = ((" ".join(sys.argv)).find('manage.py test') != -1)
+if TESTING:
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+# AWS_S3_ACCESS_KEY_ID = os.environ.get("AWS_S3_ACCESS_KEY_ID")
+# AWS_S3_SECRET_ACCESS_KEY = os.environ.get("AWS_S3_SECRET_ACCESS_KEY")
+
+AWS_ACCESS_KEY_ID = "AKIAWLKAVPXMMOLFUCVF"
+AWS_SECRET_ACCESS_KEY = "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"
+
+AWS_S3_REGION_NAME = "us-east-2"
+AWS_STORAGE_BUCKET_NAME = "django-twitter-uzhang"
+
+# https://django-twitter-uzhang.s3.us-east-2.amazonaws.com/
+# userprofile/2022/02/27/dog.jpg
+# ?X-Amz-Algorithm=AWS4-HMAC-SHA256
+# &X-Amz-Credential=AKIAWLKAVPXMMOLFUCVF%2F20220227%2Fus-east-2%2Fs3%2Faws4_request
+# &X-Amz-Date=20220227T230008Z&X-Amz-Expires=3600
+# &X-Amz-SignedHeaders=host
+# &X-Amz-Signature=98c01633fa917a9e3e448901bc39cab73f36c0d636428de86037d0d93202d2f3

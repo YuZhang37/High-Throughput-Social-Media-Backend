@@ -1,24 +1,36 @@
 from rest_framework import serializers
 
-from core.models import User
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+from core.models import User, UserProfile
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):
+    nickname = serializers.CharField(source='profile.nickname')
+    avatar_url = serializers.SerializerMethodField()
+
+    def get_avatar_url(self, obj):
+        profile = obj.profile
+        if profile.avatar:
+            return profile.avatar.url
+        return None
+
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'nickname', 'avatar_url']
 
 
-class SimpleUserSerializerWithEmail(serializers.ModelSerializer):
+class SimpleUserSerializerWithEmail(SimpleUserSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ['id', 'username', 'email', 'nickname', 'avatar_url']
+
+
+class UserSerializer(SimpleUserSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'nickname', 'avatar_url',
+        ]
 
 
 class UserSerializerForLogin(serializers.ModelSerializer):
@@ -64,3 +76,14 @@ class UserSerializerForSignup(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+
+
+class UserProfileSerializerForUpdate(serializers.ModelSerializer):
+    nickname = serializers.CharField(
+        min_length=1, max_length=140, required=False
+    )
+    avatar = serializers.FileField(required=False)
+
+    class Meta:
+        model = UserProfile
+        fields = ['nickname', 'avatar']

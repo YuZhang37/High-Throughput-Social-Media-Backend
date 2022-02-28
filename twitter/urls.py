@@ -22,7 +22,7 @@ from django.urls import path, include
 from rest_framework import routers
 
 from comments.api.views import CommentViewSet
-from core.api.views import AccountViewSet
+from core.api.views import AccountViewSet, UserProfileViewSet, UserViewSet
 from friendships.api.views import FriendshipViewSet
 from inbox.api.views import NotificationViewSet
 from likes.api.views import LikeViewSet
@@ -36,6 +36,7 @@ admin.site.site_header = 'Twitter Admin'
 admin.site.index_title = 'Admin'
 
 router = routers.DefaultRouter()
+router.register('users', UserViewSet, basename='user')
 router.register('accounts', AccountViewSet, basename='account')
 router.register('tweets', TweetViewSet, basename='tweet')
 router.register('friendships', FriendshipViewSet, basename='friendship')
@@ -43,6 +44,7 @@ router.register('newsfeeds', NewsFeedViewSet, basename='newsfeed')
 router.register('comments', CommentViewSet, basename='comment')
 router.register('likes', LikeViewSet, basename='like')
 router.register('notifications', NotificationViewSet, basename='notification')
+router.register('userprofiles', UserProfileViewSet, basename='userprofile')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
