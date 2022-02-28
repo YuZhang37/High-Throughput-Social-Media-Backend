@@ -50,3 +50,6 @@ class TweetTests(TestCase):
         self.assertEqual(self.tweet.tweetphoto_set.count(), 1)
         # print("photo:", photo)
 
+
+
+
