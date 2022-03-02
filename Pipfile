@@ -11,6 +11,7 @@ django-filter = "*"
 django-notifications-hq = "*"
 django-storages = "*"
 boto3 = "*"
+pymemcache = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
