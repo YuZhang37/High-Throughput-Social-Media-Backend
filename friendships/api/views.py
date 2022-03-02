@@ -14,6 +14,7 @@ from friendships.api.serializers import (
     FriendshipSerializerForFollowings,
 )
 from friendships.models import Friendship
+from friendships.services import FriendshipService
 
 
 class FriendshipViewSet(GenericViewSet):
@@ -62,6 +63,7 @@ class FriendshipViewSet(GenericViewSet):
         friendship = Friendship.objects.create(
             from_user=from_user, to_user=to_user
         )
+        FriendshipService.invalidate_following_cache(from_user_id=from_user.id)
         # data = {'from_usr': from_user_id, 'to_user': to_user_id}
         # serializer = FriendshipSerializerForFollow(data=data)
         return Response({
@@ -84,6 +86,10 @@ class FriendshipViewSet(GenericViewSet):
             from_user=from_user.id,
             to_user=to_user.id,
         ).delete()
+        if deleted:
+            FriendshipService.invalidate_following_cache(
+                from_user_id=from_user.id
+            )
         return Response({
             "success": True,
             "deleted": deleted,

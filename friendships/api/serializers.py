@@ -5,13 +5,34 @@ from friendships.models import Friendship
 from friendships.services import FriendshipService
 
 
+class FollowingUserIdMixin:
+
+    # object-level caching is important for following_user_id_set, since
+    # in one query, we will serialize lots of friendships,
+    # has_followed will be referenced to many times.
+    @property
+    def following_user_id_set(self: serializers.ModelSerializer):
+        if self.context['request'].user.is_anonymous:
+            return {}
+        if hasattr(self, '_cached_following_user_id_set'):
+            return self._cached_following_user_id_set
+        following_user_id_set = FriendshipService.get_following_user_id_set(
+            from_user_id=self.context['request'].user.id
+        )
+        setattr(self, '_cached_following_user_id_set', following_user_id_set)
+        return following_user_id_set
+
+
 class EmptyFriendshipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Friendship
         fields = []
 
 
-class FriendshipSerializerForFollowers(serializers.ModelSerializer):
+class FriendshipSerializerForFollowers(
+    serializers.ModelSerializer,
+    FollowingUserIdMixin,
+):
     user = SimpleUserSerializerWithEmail(source='from_user')
     has_followed = serializers.SerializerMethodField()
 
@@ -20,13 +41,14 @@ class FriendshipSerializerForFollowers(serializers.ModelSerializer):
         fields = ['user', 'created_at', 'has_followed']
 
     def get_has_followed(self, obj):
-        return FriendshipService.has_followed(
-            from_user=self.context['request'].user,
-            to_user=obj.from_user,
-        )
+        # can't use obj.from_user.id, it will issue a query
+        return obj.from_user_id in self.following_user_id_set
 
 
-class FriendshipSerializerForFollowings(serializers.ModelSerializer):
+class FriendshipSerializerForFollowings(
+    serializers.ModelSerializer,
+    FollowingUserIdMixin,
+):
     user = SimpleUserSerializerWithEmail(source='to_user')
     has_followed = serializers.SerializerMethodField()
 
@@ -35,7 +57,4 @@ class FriendshipSerializerForFollowings(serializers.ModelSerializer):
         fields = ['user', 'created_at', 'has_followed']
 
     def get_has_followed(self, obj):
-        return FriendshipService.has_followed(
-            from_user=self.context['request'].user,
-            to_user=obj.to_user,
-        )
+        return obj.to_user_id in self.following_user_id_set

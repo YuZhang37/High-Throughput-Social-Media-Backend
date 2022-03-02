@@ -176,6 +176,20 @@ if TESTING:
 AWS_S3_REGION_NAME = "us-east-2"
 AWS_STORAGE_BUCKET_NAME = "django-twitter-uzhang"
 
+# https://docs.djangoproject.com/en/4.0/topics/cache/
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': '127.0.0.1:11211',
+        'TIMEOUT': 86400,
+    },
+    'testing': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': '127.0.0.1:11211',
+        'TIMEOUT': 86400,
+        'KEY_PREFIX': 'testing',
+    },
+}
 
 try:
     from twitter.local_settings import *
@@ -186,3 +200,6 @@ except:
 
 # self-defined
 ENDLESS_PAGINATION_SIZE = 20
+
+
+
