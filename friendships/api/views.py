@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from rest_framework.viewsets import GenericViewSet
 
+from friendships.api.paginations import FriendshipPagination
 from friendships.api.serializers import (
     EmptyFriendshipSerializer,
     FriendshipSerializerForFollowers,
@@ -19,24 +20,27 @@ class FriendshipViewSet(GenericViewSet):
 
     queryset = get_user_model().objects.all()
     serializer_class = EmptyFriendshipSerializer
+    pagination_class = FriendshipPagination
     
     @action(methods=['GET'], detail=True, permission_classes=[AllowAny])
     def followers(self, request, pk):
         self.get_object()
         friendships = Friendship.objects.filter(to_user=pk).order_by('-created_at')
-        serializer = FriendshipSerializerForFollowers(friendships, many=True)
-        return Response({
-            "followers": serializer.data
-        }, status=status.HTTP_200_OK)
+        page = self.paginate_queryset(friendships)
+        serializer = FriendshipSerializerForFollowers(
+            page, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(data=serializer.data)
 
     @action(methods=['GET'], detail=True, permission_classes=[AllowAny])
     def followings(self, request, pk):
         self.get_object()
         friendships = Friendship.objects.filter(from_user=pk).order_by('-created_at')
-        serializer = FriendshipSerializerForFollowings(friendships, many=True)
-        return Response({
-            "followings": serializer.data
-        }, status=status.HTTP_200_OK)
+        page = self.paginate_queryset(friendships)
+        serializer = FriendshipSerializerForFollowings(
+            page, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(data=serializer.data)
 
     @action(methods=['POST'], detail=True, permission_classes=[IsAuthenticated])
     def follow(self, request: Request, pk):
@@ -59,7 +63,9 @@ class FriendshipViewSet(GenericViewSet):
         # serializer = FriendshipSerializerForFollow(data=data)
         return Response({
             "success": True,
-            "following": FriendshipSerializerForFollowings(friendship).data
+            "following": FriendshipSerializerForFollowings(
+                friendship, context={'request': request},
+            ).data
         }, status=status.HTTP_201_CREATED)
 
     @action(methods=['POST'], detail=True, permission_classes=[IsAuthenticated])
