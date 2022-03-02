@@ -26,6 +26,9 @@ class FriendshipViewSet(GenericViewSet):
     def followers(self, request, pk):
         self.get_object()
         friendships = Friendship.objects.filter(to_user=pk).order_by('-created_at')
+        # when calling paginate_queryset(), pagination class will be instantiated
+        # <for each request, there is a new instance of the viewset to serve the request
+        # when the request is finished with a response, the instance is destroyed>
         page = self.paginate_queryset(friendships)
         serializer = FriendshipSerializerForFollowers(
             page, many=True, context={'request': request}
