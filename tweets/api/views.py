@@ -13,12 +13,14 @@ from tweets.api.serializers import (
 )
 from tweets.models import Tweet
 from utils.decorators import required_params
+from utils.paginations import EndlessPagination
 
 
 class TweetViewSet(GenericViewSet):
 
     queryset = Tweet.objects.all()
     serializer_class = TweetSerializerForCreate
+    pagination_class = EndlessPagination
 
     def get_permissions(self):
         if self.action == 'create':
@@ -32,15 +34,14 @@ class TweetViewSet(GenericViewSet):
             return Response({
                 "message": "user doesn't exist",
             }, status=status.HTTP_400_BAD_REQUEST)
-        tweets = Tweet.objects.filter(user=user_id).order_by("-created_at")
+        queryset = Tweet.objects.filter(user=user_id).order_by("-created_at")
+        tweets = self.paginate_queryset(queryset)
         serializer = TweetSerializer(
             tweets,
             many=True,
             context={'request': request}
         )
-        return Response({
-            "tweets": serializer.data
-        }, status=status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)
 
     def create(self, request: Request):
         serializer = TweetSerializerForCreate(
