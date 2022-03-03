@@ -32,7 +32,7 @@ class UserViewSet(viewsets.GenericViewSet,
 class AccountViewSet(viewsets.GenericViewSet):
 
     # the default permission is set in settings.
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny, ]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 

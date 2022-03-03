@@ -47,7 +47,7 @@ class TweetSerializerForCreate(serializers.ModelSerializer):
 
 # clean tweet information only from itself
 class TweetSerializer(serializers.ModelSerializer):
-    user = SimpleUserSerializerWithEmail()
+    user = SimpleUserSerializerWithEmail(source='cached_user')
     has_liked = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()

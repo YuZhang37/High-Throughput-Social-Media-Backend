@@ -13,13 +13,13 @@ NEWSFEED_LIST_API = '/api/newsfeeds/'
 class CommentApiTests(TestCase):
 
     def setUp(self):
+        self.clear_cache()
         self.user1 = self.create_user('user1')
         self.user1_client = APIClient()
         self.user1_client.force_authenticate(self.user1)
         self.user2 = self.create_user('user2')
         self.user2_client = APIClient()
         self.user2_client.force_authenticate(self.user2)
-
         self.tweet = self.create_tweet(self.user1)
 
     def test_create(self):
