@@ -8,7 +8,7 @@ from tweets.api.serializers import TweetSerializer
 # django-rest-framework-access-context-from-nested-serializer
 # not found any official reference on how nested serializer works
 class NewsFeedSerializer(serializers.ModelSerializer):
-    tweet = TweetSerializer()
+    tweet = TweetSerializer(source='cached_tweet')
 
     class Meta:
         model = NewsFeed

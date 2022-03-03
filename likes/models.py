@@ -1,9 +1,10 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from core.services import UserService
+from utils.memcached_services import MemcachedService
 
 
 class Like(models.Model):
@@ -38,5 +39,7 @@ class Like(models.Model):
 
     @property
     def cached_user(self):
-        user = UserService.get_user_from_cache(self.user_id)
+        user = MemcachedService.get_object_from_cache(
+            model_class=get_user_model(), object_id=self.user_id
+        )
         return user

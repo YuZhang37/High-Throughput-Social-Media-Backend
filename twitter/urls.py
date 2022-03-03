@@ -18,10 +18,8 @@ from pprint import pprint
 
 import notifications
 from django.contrib import admin
-from django.template.defaulttags import url
 from django.urls import path, include
 from rest_framework import routers
-
 from comments.api.views import CommentViewSet
 from core.api.views import AccountViewSet, UserProfileViewSet, UserViewSet
 from friendships.api.views import FriendshipViewSet
