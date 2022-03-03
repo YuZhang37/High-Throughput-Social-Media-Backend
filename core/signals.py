@@ -2,6 +2,7 @@
 
 def user_changed(sender, instance, **kwargs):
     from core.services import UserService
+    # print("invalidate: ", instance.id, instance.username)
     UserService.invalidate_user(instance.id)
 
 

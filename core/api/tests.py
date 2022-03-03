@@ -134,8 +134,10 @@ class AccountApiTests(TestCase):
 
 class UserProfileAPITests(TestCase):
 
-    def test_update(self):
+    def setUp(self) -> None:
         self.clear_cache()
+
+    def test_update(self):
         user1, user1_client = self.create_user_and_client('user1')
         p = user1.profile
         p.nickname = 'old nickname'
