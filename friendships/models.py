@@ -1,9 +1,10 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save, pre_delete
 
-from core.services import UserService
 from friendships.signals import friendship_changed
+from utils.memcached_services import MemcachedService
 
 
 class Friendship(models.Model):
@@ -38,12 +39,16 @@ class Friendship(models.Model):
 
     @property
     def cached_from_user(self):
-        user = UserService.get_user_from_cache(user_id=self.from_user_id)
+        user = MemcachedService.get_object_from_cache(
+            model_class=get_user_model(), object_id=self.from_user_id
+        )
         return user
 
     @property
     def cached_to_user(self):
-        user = UserService.get_user_from_cache(user_id=self.to_user_id)
+        user = MemcachedService.get_object_from_cache(
+            model_class=get_user_model(), object_id=self.to_user_id
+        )
         return user
 
 

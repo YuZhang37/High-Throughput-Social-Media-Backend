@@ -18,7 +18,7 @@ from pprint import pprint
 
 import notifications
 from django.contrib import admin
-from django.template.defaulttags import url
+
 from django.urls import path, include
 from rest_framework import routers
 
@@ -30,6 +30,8 @@ from likes.api.views import LikeViewSet
 from newsfeeds.api.views import NewsFeedViewSet
 from tweets.api.views import TweetViewSet
 from notifications import urls
+
+from tweets.models import Tweet
 
 admin.site.site_header = 'Twitter Admin'
 # The text to put at the top of the admin index page (a string).
