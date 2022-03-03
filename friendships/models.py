@@ -1,5 +1,9 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save, pre_delete
+
+from core.services import UserService
+from friendships.signals import friendship_changed
 
 
 class Friendship(models.Model):
@@ -32,4 +36,16 @@ class Friendship(models.Model):
     def __str__(self):
         return f'{self.from_user} follows {self.to_user}'
 
+    @property
+    def cached_from_user(self):
+        user = UserService.get_user_from_cache(user_id=self.from_user_id)
+        return user
 
+    @property
+    def cached_to_user(self):
+        user = UserService.get_user_from_cache(user_id=self.to_user_id)
+        return user
+
+
+post_save.connect(friendship_changed, sender=Friendship)
+pre_delete.connect(friendship_changed, sender=Friendship)

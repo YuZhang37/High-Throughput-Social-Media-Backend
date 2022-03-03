@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
+from core.services import UserService
 from likes.models import Like
 from tweets.constants import TWEET_PHOTO_DEFAULT_STATUS, TWEET_PHOTO_STATUS_CHOICES
 from utils.time_helpers import utc_now
@@ -39,6 +40,11 @@ class Tweet(models.Model):
     def __str__(self):
         return f'{self.user} {self.created_at} {self.content}'
 
+    @property
+    def cached_user(self):
+        user = UserService.get_user_from_cache(user_id=self.user_id)
+        return user
+
 
 class TweetPhoto(models.Model):
     tweet = models.ForeignKey(Tweet, on_delete=models.SET_NULL, null=True)
@@ -68,6 +74,7 @@ class TweetPhoto(models.Model):
 
     def __str__(self):
         return f'{self.user.id} - {self.tweet.id} - {self.file}'
+
 
 
 

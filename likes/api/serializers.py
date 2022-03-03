@@ -61,7 +61,7 @@ class LikeSerializerForCancel(BaseLikeSerializerForCreateAndCancel):
 
 
 class LikeSerializer(serializers.ModelSerializer):
-    user = SimpleUserSerializer()
+    user = SimpleUserSerializer(source='cached_user')
 
     class Meta:
         model = Like

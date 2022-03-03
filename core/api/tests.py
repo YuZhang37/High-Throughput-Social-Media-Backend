@@ -1,5 +1,4 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase as DjangoTestCase
 from rest_framework.test import APIClient
 
 from core.models import User, UserProfile
@@ -12,12 +11,13 @@ LOGIN_STATUS_URL = '/api/accounts/login_status/'
 USER_PROFILE_DETAIL_URL = '/api/userprofiles/{}/'
 
 
-class AccountApiTests(DjangoTestCase):
+class AccountApiTests(TestCase):
 
     def setUp(self):
+        self.clear_cache()
         # 这个函数会在每个 test function 执行的时候被执行
         self.client = APIClient()
-        self.user = self.createUser(
+        self.user = self.create_user(
             username='admin',
             email='admin@mytwitter.com',
             password='correct password',
@@ -135,6 +135,7 @@ class AccountApiTests(DjangoTestCase):
 class UserProfileAPITests(TestCase):
 
     def test_update(self):
+        self.clear_cache()
         user1, user1_client = self.create_user_and_client('user1')
         p = user1.profile
         p.nickname = 'old nickname'

@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
+from core.services import UserService
 from likes.models import Like
 from tweets.models import Tweet
 
@@ -29,6 +30,11 @@ class Comment(models.Model):
             object_id=object_id
         ).order_by('-created_at')
         return likes
+
+    @property
+    def cached_user(self):
+        user = UserService.get_user_from_cache(user_id=self.user_id)
+        return user
 
     def __str__(self):
         return f'{self.created_at} - {self.user} ' \

@@ -1,6 +1,9 @@
 from django.db import models
 
 from django.contrib.auth.models import AbstractUser
+from django.db.models.signals import pre_delete, post_save
+
+from core import signals
 
 
 class User(AbstractUser):
@@ -23,9 +26,10 @@ class UserProfile(models.Model):
 
 
 def get_or_create_userprofile(user):
+    from core.services import UserService
     if hasattr(user, '_cached_userprofile'):
         return getattr(user, '_cached_userprofile'), False
-    userprofile, created = UserProfile.objects.get_or_create(user=user)
+    userprofile, created = UserService.get_user_profile_from_cache(user_id=user.id)
     setattr(user, '_cached_userprofile', userprofile)
     return userprofile, created
 
@@ -38,3 +42,8 @@ def get_userprofile(user):
 User.get_or_create_userprofile = get_or_create_userprofile
 User.profile = property(get_userprofile)
 
+pre_delete.connect(receiver=signals.user_changed, sender=User)
+post_save.connect(receiver=signals.user_changed, sender=User)
+
+pre_delete.connect(receiver=signals.user_profile_changed, sender=UserProfile)
+post_save.connect(receiver=signals.user_profile_changed, sender=UserProfile)

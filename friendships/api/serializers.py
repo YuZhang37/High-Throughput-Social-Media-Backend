@@ -33,7 +33,7 @@ class FriendshipSerializerForFollowers(
     serializers.ModelSerializer,
     FollowingUserIdMixin,
 ):
-    user = SimpleUserSerializerWithEmail(source='from_user')
+    user = SimpleUserSerializerWithEmail(source='cached_from_user')
     has_followed = serializers.SerializerMethodField()
 
     class Meta:
@@ -49,7 +49,7 @@ class FriendshipSerializerForFollowings(
     serializers.ModelSerializer,
     FollowingUserIdMixin,
 ):
-    user = SimpleUserSerializerWithEmail(source='to_user')
+    user = SimpleUserSerializerWithEmail(source='cached_to_user')
     has_followed = serializers.SerializerMethodField()
 
     class Meta:
