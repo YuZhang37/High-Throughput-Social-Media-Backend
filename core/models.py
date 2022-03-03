@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import pre_delete, post_save
 from core import signals
-from utils.signals import object_changed
+from utils.signals import invalidate_object_cache
 
 
 class User(AbstractUser):
@@ -41,11 +41,8 @@ def get_userprofile(user):
 User.get_or_create_userprofile = get_or_create_userprofile
 User.profile = property(get_userprofile)
 
-pre_delete.connect(receiver=object_changed, sender=User)
-post_save.connect(receiver=object_changed, sender=User)
-user = User.objects.get(id=5)
-# print("user: ", user)
-# pre_delete.send(User, instance=user)
+pre_delete.connect(receiver=invalidate_object_cache, sender=User)
+post_save.connect(receiver=invalidate_object_cache, sender=User)
 
 pre_delete.connect(receiver=signals.user_profile_changed, sender=UserProfile)
 post_save.connect(receiver=signals.user_profile_changed, sender=UserProfile)

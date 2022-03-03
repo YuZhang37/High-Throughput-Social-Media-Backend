@@ -7,7 +7,7 @@ from django.db.models.signals import pre_delete, post_save
 from likes.models import Like
 from tweets.constants import TWEET_PHOTO_DEFAULT_STATUS, TWEET_PHOTO_STATUS_CHOICES
 from utils.memcached_services import MemcachedService
-from utils.signals import object_changed
+from utils.signals import invalidate_object_cache
 from utils.time_helpers import utc_now
 
 
@@ -81,7 +81,7 @@ class TweetPhoto(models.Model):
         return f'{self.user.id} - {self.tweet.id} - {self.file}'
 
 
-pre_delete.connect(receiver=object_changed, sender=Tweet)
-post_save.connect(receiver=object_changed, sender=Tweet)
+pre_delete.connect(receiver=invalidate_object_cache, sender=Tweet)
+post_save.connect(receiver=invalidate_object_cache, sender=Tweet)
 
 
