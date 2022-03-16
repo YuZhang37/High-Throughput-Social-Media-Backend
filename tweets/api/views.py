@@ -12,6 +12,7 @@ from tweets.api.serializers import (
     TweetSerializer,
 )
 from tweets.models import Tweet
+from tweets.services import TweetService
 from utils.decorators import required_params
 from utils.paginations import EndlessPagination
 
@@ -34,8 +35,8 @@ class TweetViewSet(GenericViewSet):
             return Response({
                 "message": "user doesn't exist",
             }, status=status.HTTP_400_BAD_REQUEST)
-        queryset = Tweet.objects.filter(user=user_id).order_by("-created_at")
-        tweets = self.paginate_queryset(queryset)
+        tweet_list = TweetService.get_cached_tweets(user_id)
+        tweets = self.paginate_queryset(tweet_list)
         serializer = TweetSerializer(
             tweets,
             many=True,

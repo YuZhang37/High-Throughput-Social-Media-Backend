@@ -1,5 +1,5 @@
 from django.core import serializers
-from utils.json_encoder import JSONEncoder
+from utils.redisUtils.json_encoder import JSONEncoder
 
 
 class RedisModelSerializer:
