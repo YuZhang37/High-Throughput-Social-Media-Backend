@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from testing.testcases import TestCase
@@ -6,8 +5,10 @@ from tweets.constants import TweetPhotoStatus
 from tweets.models import Tweet, TweetPhoto
 from datetime import timedelta
 
-from utils.redis_client import RedisClient
-from utils.redis_serializers import RedisModelSerializer
+from tweets.services import TweetService
+from twitter.cache import USER_TWEET_LIST_PATTERN
+from utils.redisUtils.redis_client import RedisClient
+from utils.redisUtils.redis_serializers import RedisModelSerializer
 from utils.time_helpers import utc_now
 
 
@@ -56,14 +57,56 @@ class TweetTests(TestCase):
 
     def test_cache_tweet_in_redis(self):
         tweet = self.create_tweet(self.user1)
-        redis_instance = RedisClient.get_instance()
+        redis_client = RedisClient.get_redis_client()
         serialized_data = RedisModelSerializer.serialize(tweet)
-        redis_instance.set(f'tweet:{tweet.id}', serialized_data)
-        data = redis_instance.get(f'tweet:not_exists')
+        redis_client.set(f'tweet:{tweet.id}', serialized_data)
+        data = redis_client.get(f'tweet:not_exists')
         self.assertEqual(data, None)
 
-        data = redis_instance.get(f'tweet:{tweet.id}')
+        data = redis_client.get(f'tweet:{tweet.id}')
         cached_tweet = RedisModelSerializer.deserialize(data)
         self.assertEqual(tweet, cached_tweet)
 
 
+class TweetServiceTests(TestCase):
+
+    def setUp(self):
+        self.clear_cache()
+        self.user1 = self.create_user('user1')
+
+    def test_get_user_tweets(self):
+        tweet_ids = []
+        for i in range(3):
+            tweet = self.create_tweet(self.user1, 'tweet {}'.format(i))
+            tweet_ids.append(tweet.id)
+        tweet_ids = tweet_ids[::-1]
+
+        RedisClient.clear_db()
+
+        # cache miss
+        tweets = TweetService.get_cached_tweets(self.user1.id)
+        self.assertEqual([t.id for t in tweets], tweet_ids)
+
+        # cache hit
+        tweets = TweetService.get_cached_tweets(self.user1.id)
+        self.assertEqual([t.id for t in tweets], tweet_ids)
+
+        # cache updated
+        new_tweet = self.create_tweet(self.user1, 'new tweet')
+        tweets = TweetService.get_cached_tweets(self.user1.id)
+        tweet_ids.insert(0, new_tweet.id)
+        self.assertEqual([t.id for t in tweets], tweet_ids)
+
+    def test_create_new_tweet_before_get_cached_tweets(self):
+        tweet1 = self.create_tweet(self.user1, 'tweet1')
+
+        RedisClient.clear_db()
+        redis_client = RedisClient.get_redis_client()
+
+        key = USER_TWEET_LIST_PATTERN.format(user_id=self.user1.id)
+        self.assertEqual(redis_client.exists(key), False)
+        tweet2 = self.create_tweet(self.user1, 'tweet2')
+        self.assertEqual(redis_client.exists(key), True)
+
+        tweets = TweetService.get_cached_tweets(self.user1.id)
+        self.assertEqual([t.id for t in tweets], [tweet2.id, tweet1.id])

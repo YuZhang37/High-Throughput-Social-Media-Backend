@@ -8,7 +8,7 @@ from comments.models import Comment
 from likes.models import Like
 from newsfeeds.models import NewsFeed
 from tweets.models import Tweet
-from utils.redis_client import RedisClient
+from utils.redisUtils.redis_client import RedisClient
 
 
 class TestCase(DjangoTestCase):
