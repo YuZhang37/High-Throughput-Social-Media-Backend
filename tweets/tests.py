@@ -82,31 +82,43 @@ class TweetServiceTests(TestCase):
         tweet_ids = tweet_ids[::-1]
 
         RedisClient.clear_db()
+        redis_client = RedisClient.get_redis_client()
+        key = USER_TWEET_LIST_PATTERN.format(user_id=self.user1.id)
 
         # cache miss
+        self.assertEqual(redis_client.exists(key), False)
         tweets = TweetService.get_cached_tweets(self.user1.id)
         self.assertEqual([t.id for t in tweets], tweet_ids)
 
         # cache hit
+        self.assertEqual(redis_client.exists(key), True)
         tweets = TweetService.get_cached_tweets(self.user1.id)
         self.assertEqual([t.id for t in tweets], tweet_ids)
 
-        # cache updated
-        new_tweet = self.create_tweet(self.user1, 'new tweet')
-        tweets = TweetService.get_cached_tweets(self.user1.id)
-        tweet_ids.insert(0, new_tweet.id)
-        self.assertEqual([t.id for t in tweets], tweet_ids)
-
-    def test_create_new_tweet_before_get_cached_tweets(self):
-        tweet1 = self.create_tweet(self.user1, 'tweet1')
+    def test_push_tweet_to_cache(self):
+        tweet_ids = []
+        for i in range(3):
+            tweet = self.create_tweet(self.user1, 'tweet {}'.format(i))
+            tweet_ids.append(tweet.id)
+        tweet_ids = tweet_ids[::-1]
 
         RedisClient.clear_db()
         redis_client = RedisClient.get_redis_client()
-
         key = USER_TWEET_LIST_PATTERN.format(user_id=self.user1.id)
-        self.assertEqual(redis_client.exists(key), False)
-        tweet2 = self.create_tweet(self.user1, 'tweet2')
-        self.assertEqual(redis_client.exists(key), True)
 
+        # cache miss, create a new tweet
+        self.assertEqual(redis_client.exists(key), False)
+        new_tweet1 = self.create_tweet(self.user1, 'new tweet')
         tweets = TweetService.get_cached_tweets(self.user1.id)
-        self.assertEqual([t.id for t in tweets], [tweet2.id, tweet1.id])
+        self.assertEqual(redis_client.exists(key), True)
+        tweet_ids.insert(0, new_tweet1.id)
+        self.assertEqual([t.id for t in tweets], tweet_ids)
+
+        # cache hit, create another new tweet
+        self.assertEqual(redis_client.exists(key), True)
+        new_tweet2 = self.create_tweet(self.user1, 'new tweet')
+        tweets = TweetService.get_cached_tweets(self.user1.id)
+        tweet_ids.insert(0, new_tweet2.id)
+        self.assertEqual([t.id for t in tweets], tweet_ids)
+
+

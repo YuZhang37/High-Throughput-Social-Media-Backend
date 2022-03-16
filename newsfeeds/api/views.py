@@ -1,7 +1,6 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
-from rest_framework.response import Response
 
 from newsfeeds.api.serializers import NewsFeedSerializer
 from newsfeeds.models import NewsFeed
@@ -17,8 +16,8 @@ class NewsFeedViewSet(viewsets.GenericViewSet):
 
     def list(self, request: Request):
         user = request.user
-        queryset = self.queryset.filter(user=user)
-        newsfeeds = self.paginate_queryset(queryset)
+        newsfeed_list = self.queryset.filter(user=user)
+        newsfeeds = self.paginate_queryset(newsfeed_list)
         serializer = NewsFeedSerializer(
             newsfeeds,
             many=True,

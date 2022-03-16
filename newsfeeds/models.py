@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
 
+from newsfeeds.signals import push_newsfeed_to_cache_after_creation
 from tweets.models import Tweet
 from utils.memcached_services import MemcachedService
 
@@ -29,3 +31,8 @@ class NewsFeed(models.Model):
         )
         return tweet
 
+
+post_save.connect(
+    receiver=push_newsfeed_to_cache_after_creation,
+    sender=NewsFeed
+)
