@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from newsfeeds.services import NewsFeedServices
+from newsfeeds.services import NewsfeedService
 from tweets.api.serializers import (
     TweetSerializerForCreate,
     TweetSerializerWithDetail,
@@ -56,7 +56,7 @@ class TweetViewSet(GenericViewSet):
                 "errors": serializer.errors,
             }, status=status.HTTP_400_BAD_REQUEST)
         tweet = serializer.save()
-        NewsFeedServices.fan_out_to_followers(tweet)
+        NewsfeedService.fan_out_to_followers(tweet)
         return Response(
             TweetSerializer(tweet, context={'request': request}).data,
             status=status.HTTP_201_CREATED
