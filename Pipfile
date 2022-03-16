@@ -12,6 +12,8 @@ django-notifications-hq = "*"
 django-storages = "*"
 boto3 = "*"
 pymemcache = "*"
+redis = "*"
+hiredis = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
