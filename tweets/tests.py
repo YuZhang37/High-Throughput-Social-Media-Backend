@@ -5,6 +5,9 @@ from testing.testcases import TestCase
 from tweets.constants import TweetPhotoStatus
 from tweets.models import Tweet, TweetPhoto
 from datetime import timedelta
+
+from utils.redis_client import RedisClient
+from utils.redis_serializers import RedisModelSerializer
 from utils.time_helpers import utc_now
 
 
@@ -51,6 +54,16 @@ class TweetTests(TestCase):
         self.assertEqual(self.tweet.tweetphoto_set.count(), 1)
         # print("photo:", photo)
 
+    def test_cache_tweet_in_redis(self):
+        tweet = self.create_tweet(self.user1)
+        redis_instance = RedisClient.get_instance()
+        serialized_data = RedisModelSerializer.serialize(tweet)
+        redis_instance.set(f'tweet:{tweet.id}', serialized_data)
+        data = redis_instance.get(f'tweet:not_exists')
+        self.assertEqual(data, None)
 
+        data = redis_instance.get(f'tweet:{tweet.id}')
+        cached_tweet = RedisModelSerializer.deserialize(data)
+        self.assertEqual(tweet, cached_tweet)
 
 
