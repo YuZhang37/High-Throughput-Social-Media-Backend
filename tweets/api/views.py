@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from newsfeeds.services import NewsfeedService
+from newsfeeds.services import NewsFeedService
 from tweets.api.serializers import (
     TweetSerializerForCreate,
     TweetSerializerWithDetail,
@@ -35,10 +35,15 @@ class TweetViewSet(GenericViewSet):
             return Response({
                 "message": "user doesn't exist",
             }, status=status.HTTP_400_BAD_REQUEST)
-        tweet_list = TweetService.get_cached_tweets(user_id)
-        tweets = self.paginate_queryset(tweet_list)
+        queryset = Tweet.objects.filter(user_id=user_id).order_by('-created_at')
+        tweet_list = TweetService.get_cached_tweets(user_id, queryset=queryset)
+        page = self.paginator.paginate_cached_list_with_limited_size(
+            tweet_list, request
+        )
+        if not page:
+            page = self.paginate_queryset(queryset)
         serializer = TweetSerializer(
-            tweets,
+            page,
             many=True,
             context={'request': request}
         )
@@ -56,7 +61,7 @@ class TweetViewSet(GenericViewSet):
                 "errors": serializer.errors,
             }, status=status.HTTP_400_BAD_REQUEST)
         tweet = serializer.save()
-        NewsfeedService.fan_out_to_followers(tweet)
+        NewsFeedService.fan_out_to_followers(tweet)
         return Response(
             TweetSerializer(tweet, context={'request': request}).data,
             status=status.HTTP_201_CREATED

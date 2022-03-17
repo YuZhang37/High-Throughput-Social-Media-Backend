@@ -1,6 +1,6 @@
 
 from newsfeeds.models import NewsFeed
-from newsfeeds.services import NewsfeedService
+from newsfeeds.services import NewsFeedService
 from testing.testcases import TestCase
 from twitter.cache import USER_NEWSFEED_LIST_PATTERN
 from utils.redisUtils.redis_client import RedisClient
@@ -39,13 +39,13 @@ class NewsFeedServiceTests(TestCase):
         # cache miss
         key = USER_NEWSFEED_LIST_PATTERN.format(user_id=self.user1.id)
         self.assertEqual(redis_client.exists(key), False)
-        newsfeeds = NewsfeedService.get_cached_newsfeed_list(self.user1.id)
+        newsfeeds = NewsFeedService.get_cached_newsfeed_list(self.user1.id)
         self.assertEqual([f.id for f in newsfeeds], newsfeed_ids)
 
         # cache hit
         key = USER_NEWSFEED_LIST_PATTERN.format(user_id=self.user1.id)
         self.assertEqual(redis_client.exists(key), True)
-        newsfeeds = NewsfeedService.get_cached_newsfeed_list(self.user1.id)
+        newsfeeds = NewsFeedService.get_cached_newsfeed_list(self.user1.id)
         self.assertEqual([f.id for f in newsfeeds], newsfeed_ids)
 
     def test_push_newsfeed_to_cache(self):
@@ -65,7 +65,7 @@ class NewsFeedServiceTests(TestCase):
         tweet = self.create_tweet(self.user1)
         new_newsfeed1 = self.create_newsfeed(self.user1, tweet)
         self.assertEqual(redis_client.exists(key), True)
-        newsfeeds = NewsfeedService.get_cached_newsfeed_list(self.user1.id)
+        newsfeeds = NewsFeedService.get_cached_newsfeed_list(self.user1.id)
         newsfeed_ids.insert(0, new_newsfeed1.id)
         self.assertEqual([f.id for f in newsfeeds], newsfeed_ids)
 
@@ -73,7 +73,7 @@ class NewsFeedServiceTests(TestCase):
         tweet = self.create_tweet(self.user1)
         new_newsfeed2 = self.create_newsfeed(self.user1, tweet)
         self.assertEqual(redis_client.exists(key), True)
-        newsfeeds = NewsfeedService.get_cached_newsfeed_list(self.user1.id)
+        newsfeeds = NewsFeedService.get_cached_newsfeed_list(self.user1.id)
         newsfeed_ids.insert(0, new_newsfeed2.id)
         self.assertEqual([f.id for f in newsfeeds], newsfeed_ids)
 
@@ -88,8 +88,8 @@ class NewsFeedServiceTests(TestCase):
         tweet2 = self.create_tweet(self.user1)
         tweet_ids = [tweet2.id, tweet1.id]
 
-        NewsfeedService.fan_out_to_followers(tweet1)
-        NewsfeedService.fan_out_to_followers(tweet2)
+        NewsFeedService.fan_out_to_followers(tweet1)
+        NewsFeedService.fan_out_to_followers(tweet2)
 
         user1_newsfeeds = NewsFeed.objects.filter(user=self.user1)\
             .order_by('-created_at')
@@ -114,15 +114,15 @@ class NewsFeedServiceTests(TestCase):
         tweet2 = self.create_tweet(self.user1)
         tweet_ids = [tweet2.id, tweet1.id]
 
-        NewsfeedService.fan_out_to_followers(tweet1)
-        NewsfeedService.fan_out_to_followers(tweet2)
+        NewsFeedService.fan_out_to_followers(tweet1)
+        NewsFeedService.fan_out_to_followers(tweet2)
 
         redis_client = RedisClient.get_redis_client()
 
         key1 = USER_NEWSFEED_LIST_PATTERN.format(user_id=self.user1.id)
         self.assertEqual(redis_client.exists(key1), True)
 
-        user1_newsfeeds = NewsfeedService.get_cached_newsfeed_list(self.user1.id)
+        user1_newsfeeds = NewsFeedService.get_cached_newsfeed_list(self.user1.id)
         self.assertEqual(
             [newsfeed.tweet.id for newsfeed in user1_newsfeeds], tweet_ids
         )
@@ -130,7 +130,7 @@ class NewsFeedServiceTests(TestCase):
         key11 = USER_NEWSFEED_LIST_PATTERN.format(user_id=self.user1.id)
         self.assertEqual(redis_client.exists(key11), True)
 
-        user11_newsfeeds = NewsfeedService.get_cached_newsfeed_list(self.user11.id)
+        user11_newsfeeds = NewsFeedService.get_cached_newsfeed_list(self.user11.id)
         self.assertEqual(
             [newsfeed.tweet.id for newsfeed in user11_newsfeeds], tweet_ids
         )
