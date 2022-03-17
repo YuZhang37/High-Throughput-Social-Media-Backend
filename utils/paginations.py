@@ -17,32 +17,30 @@ class EndlessPagination(BasePagination):
     def to_html(self):
         pass
 
-    def paginate_tweet_list(self, tweet_list, request):
+    def paginate_cached_list(self, cached_list, request):
         self.has_next_page = False
         index = 0
         if 'created_at__gt' in request.query_params:
             created_at__gt = request.query_params['created_at__gt']
             timestamp = parser.isoparse(created_at__gt)
-            for index, tweet in enumerate(tweet_list):
+            for index, tweet in enumerate(cached_list):
                 if tweet.created_at <= timestamp:
                     break
-            return tweet_list[0: index]
+            return cached_list[0: index]
 
         if 'created_at__lt' in request.query_params:
             created_at__lt = request.query_params['created_at__lt']
             timestamp = parser.parse(created_at__lt)
-            for index, tweet in enumerate(tweet_list):
+            for index, tweet in enumerate(cached_list):
                 if tweet.created_at < timestamp:
                     break
             else:
                 return []
-        if len(tweet_list) - 1 >= index + self.page_size:
+        if len(cached_list) - 1 >= index + self.page_size:
             self.has_next_page = True
-        return tweet_list[index: index + self.page_size]
+        return cached_list[index: index + self.page_size]
 
     def paginate_queryset(self, queryset, request, view=None):
-        if type(queryset) == list:
-            return self.paginate_tweet_list(queryset, request)
         self.has_next_page = False
         if 'created_at__gt' in request.query_params:
             created_at__gt = request.query_params['created_at__gt']
@@ -57,6 +55,16 @@ class EndlessPagination(BasePagination):
         if len(queryset) > self.page_size:
             self.has_next_page = True
         return queryset[:self.page_size]
+
+    def paginate_cached_list_with_limited_size(self, cached_list, request):
+        page = self.paginate_cached_list(cached_list, request)
+        if len(cached_list) < settings.REDIS_CACHED_LIST_LIMIT_LENGTH:
+            return page
+        if 'created_at__gt' in request.query_params:
+            return page
+        if self.has_next_page:
+            return page
+        return None
 
     def get_paginated_response(self, data):
         return Response({

@@ -23,8 +23,9 @@ class TweetPhotoService:
 class TweetService:
 
     @classmethod
-    def get_cached_tweets(cls, user_id):
-        queryset = Tweet.objects.filter(user=user_id).order_by("-created_at")
+    def get_cached_tweets(cls, user_id, queryset=None):
+        if not queryset:
+            queryset = Tweet.objects.filter(user=user_id).order_by("-created_at")
         key = USER_TWEET_LIST_PATTERN.format(user_id=user_id)
         tweets = RedisService.get_objects(key, queryset)
         return tweets
