@@ -1,5 +1,3 @@
-from utils.memcached_services import MemcachedService
-
 
 def incr_comments_count(sender, instance, created, **kwargs):
     if not created:
@@ -9,7 +7,6 @@ def incr_comments_count(sender, instance, created, **kwargs):
     Tweet.objects.filter(id=instance.tweet_id).update(
         comments_count=F('comments_count') + 1
     )
-    MemcachedService.invalidate_object(Tweet, instance.tweet_id)
 
 
 def decr_comments_count(sender, instance, **kwargs):
@@ -18,5 +15,4 @@ def decr_comments_count(sender, instance, **kwargs):
     Tweet.objects.filter(id=instance.tweet_id).update(
         comments_count=F('comments_count') - 1
     )
-    MemcachedService.invalidate_object(Tweet, instance.tweet_id)
 
