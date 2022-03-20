@@ -8,7 +8,7 @@ from likes.models import Like
 from tweets.constants import TWEET_PHOTO_DEFAULT_STATUS, TWEET_PHOTO_STATUS_CHOICES
 from tweets.signals import push_tweet_to_cache_after_creation
 from utils.memcached_services import MemcachedService
-from utils.signals import invalidate_object_cache
+from utils.signals import invalidate_cached_object
 from utils.time_helpers import utc_now
 
 
@@ -22,6 +22,10 @@ class Tweet(models.Model):
     )
     content = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # denormalized files
+    likes_count = models.IntegerField(default=0, null=True)
+    comments_count = models.IntegerField(default=0, null=True)
 
     class Meta:
         index_together = [['user', 'created_at'], ]
@@ -82,7 +86,7 @@ class TweetPhoto(models.Model):
         return f'{self.user.id} - {self.tweet.id} - {self.file}'
 
 
-pre_delete.connect(receiver=invalidate_object_cache, sender=Tweet)
-post_save.connect(receiver=invalidate_object_cache, sender=Tweet)
+pre_delete.connect(receiver=invalidate_cached_object, sender=Tweet)
+post_save.connect(receiver=invalidate_cached_object, sender=Tweet)
 post_save.connect(receiver=push_tweet_to_cache_after_creation, sender=Tweet)
 

@@ -2,7 +2,9 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models.signals import pre_delete, post_save
 
+from comments.signals import incr_comments_count, decr_comments_count
 from likes.models import Like
 from tweets.models import Tweet
 from utils.memcached_services import MemcachedService
@@ -18,6 +20,9 @@ class Comment(models.Model):
     content = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # denormalized fields
+    likes_count = models.IntegerField(default=0, null=True)
 
     class Meta:
         index_together = [['tweet', 'created_at', ], ]
@@ -44,4 +49,5 @@ class Comment(models.Model):
                f'comments on {self.tweet}: {self.content}'
 
 
-
+pre_delete.connect(receiver=decr_comments_count, sender=Comment)
+post_save.connect(receiver=incr_comments_count, sender=Comment)

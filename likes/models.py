@@ -3,7 +3,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models.signals import pre_delete, post_save
 
+from likes.signals import decr_likes_count, incr_likes_count
 from utils.memcached_services import MemcachedService
 
 
@@ -43,3 +45,7 @@ class Like(models.Model):
             model_class=get_user_model(), object_id=self.user_id
         )
         return user
+
+
+pre_delete.connect(receiver=decr_likes_count, sender=Like)
+post_save.connect(receiver=incr_likes_count, sender=Like)
