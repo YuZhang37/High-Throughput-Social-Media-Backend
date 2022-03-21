@@ -55,7 +55,7 @@ class RedisService:
             return redis_client.incr(key)
 
         count = getattr(instance, attr)
-        redis_client.set(key, count)
+        redis_client.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
         return count
 
     @classmethod
@@ -66,7 +66,7 @@ class RedisService:
             return redis_client.decr(key)
 
         count = getattr(instance, attr)
-        redis_client.set(key, count)
+        redis_client.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
         return count
 
     @classmethod
@@ -77,7 +77,7 @@ class RedisService:
         if count is not None:
             return int(count)
         count = getattr(instance, attr)
-        redis_client.set(key, count)
+        redis_client.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
         return count
 
 
