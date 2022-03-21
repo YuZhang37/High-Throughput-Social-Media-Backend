@@ -42,6 +42,51 @@ class RedisService:
         redis_client.lpush(key, serialized_obj)
         redis_client.ltrim(key, 0, settings.REDIS_CACHED_LIST_LIMIT_LENGTH - 1)
 
+    @classmethod
+    def _get_count_key(cls, instance, attr):
+        key = f'{instance.__class__.__name__}.{attr}:{instance.id}'
+        return key
+
+    @classmethod
+    def incr_count_key(cls, instance, attr):
+        key = cls._get_count_key(instance, attr)
+        redis_client = RedisClient.get_redis_client()
+        if redis_client.exists(key):
+            return redis_client.incr(key)
+
+        count = getattr(instance, attr)
+        redis_client.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
+        return count
+
+    @classmethod
+    def decr_count_key(cls, instance, attr):
+        key = cls._get_count_key(instance, attr)
+        redis_client = RedisClient.get_redis_client()
+        if redis_client.exists(key):
+            return redis_client.decr(key)
+
+        count = getattr(instance, attr)
+        redis_client.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
+        return count
+
+    @classmethod
+    def get_count(cls, instance, attr):
+        key = cls._get_count_key(instance, attr)
+        redis_client = RedisClient.get_redis_client()
+        count = redis_client.get(key)
+        if count is not None:
+            return int(count)
+        count = getattr(instance, attr)
+        redis_client.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
+        return count
+
+
+
+
+
+
+
+
 
 
 

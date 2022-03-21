@@ -5,6 +5,7 @@ from core.api.serializers import SimpleUserSerializer
 from likes.models import Like
 from likes.services import LikeService
 from tweets.models import Tweet
+from utils.redisUtils.redis_services import RedisService
 
 
 class CommentSerializerForCreate(serializers.ModelSerializer):
@@ -58,11 +59,7 @@ class CommentSerializer(serializers.ModelSerializer):
         ]
 
     def get_likes_count(self, obj):
-        content_type = ContentType.objects.get_for_model(Comment)
-        count = Like.objects.filter(
-            content_type=content_type,
-            object_id=obj.id,
-        ).count()
+        count = RedisService.get_count(obj, 'likes_count')
         return count
 
     def get_has_liked(self, obj):

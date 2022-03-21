@@ -1,16 +1,14 @@
-from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
+
 from rest_framework import serializers
 
 from comments.api.serializers import CommentSerializer
-from comments.models import Comment
 from core.api.serializers import SimpleUserSerializerWithEmail
 from likes.api.serializers import LikeSerializer
-from likes.models import Like
 from likes.services import LikeService
 from tweets.constants import TWEET_PHOTO_UPLOAD_LIMIT
 from tweets.models import Tweet
 from tweets.services import TweetPhotoService
+from utils.redisUtils.redis_services import RedisService
 
 
 class TweetSerializerForCreate(serializers.ModelSerializer):
@@ -74,15 +72,12 @@ class TweetSerializer(serializers.ModelSerializer):
         return has_liked
 
     def get_likes_count(self, obj: Tweet):
-        return obj.like_set.count()
-        # count = Like.objects.filter(
-        #     content_type=ContentType.objects.get_for_model(Tweet),
-        #     object_id=obj.id
-        # ).count()
-        # return count
+        count = RedisService.get_count(obj, 'likes_count')
+        return count
 
     def get_comments_count(self, obj: Tweet):
-        return obj.comment_set.count()
+        count = RedisService.get_count(obj, 'comments_count')
+        return count
 
     def get_photo_urls(self, obj: Tweet):
         urls = []
