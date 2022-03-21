@@ -159,3 +159,61 @@ class CommentApiTests(TestCase):
         response = self.user2_client.get(NEWSFEED_LIST_API)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['results'][0]['tweet']['comments_count'], 2)
+
+    def test_comments_count_with_cache(self):
+        self.create_newsfeed(self.user1, self.tweet)
+        self.create_newsfeed(self.user2, self.tweet)
+        tweet_url = '/api/tweets/{}/'.format(self.tweet.id)
+        response = self.user1_client.get(tweet_url)
+        self.assertEqual(self.tweet.comments_count, 0)
+        self.assertEqual(response.data['tweet']['comments_count'], 0)
+
+        data = {'tweet_id': self.tweet.id, 'content': 'a comment'}
+        for i in range(2):
+            _, client = self.create_user_and_client('someone{}'.format(i))
+            client.post(COMMENT_URL, data)
+            response = client.get(tweet_url)
+            self.assertEqual(response.data['tweet']['comments_count'], i + 1)
+            self.tweet.refresh_from_db()
+            self.assertEqual(self.tweet.comments_count, i + 1)
+
+        post_response = self.user2_client.post(COMMENT_URL, data)
+        comment_data = post_response.data
+        response = self.user2_client.get(tweet_url)
+        self.assertEqual(response.data['tweet']['comments_count'], 3)
+        self.tweet.refresh_from_db()
+        self.assertEqual(self.tweet.comments_count, 3)
+
+        # check tweet list
+        response = self.user1_client.get(TWEET_LIST_API, {'user_id': self.user1.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['results'][0]['comments_count'], 3)
+        response = self.user2_client.get(TWEET_LIST_API, {'user_id': self.user1.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['results'][0]['comments_count'], 3)
+
+        # check newsfeed api
+        newsfeed_url = '/api/newsfeeds/'
+        response = self.user1_client.get(newsfeed_url)
+        self.assertEqual(response.data['results'][0]['tweet']['comments_count'], 3)
+        response = self.user2_client.get(newsfeed_url)
+        self.assertEqual(response.data['results'][0]['tweet']['comments_count'], 3)
+
+        # update comment shouldn't update comments_count
+        comment_url = '{}{}/'.format(COMMENT_URL, comment_data['comment']['id'])
+        response = self.user2_client.put(comment_url, {'content': 'updated'})
+        self.assertEqual(response.status_code, 200)
+        response = self.user2_client.get(tweet_url)
+        self.assertEqual(response.data['tweet']['comments_count'], 3)
+        self.tweet.refresh_from_db()
+        self.assertEqual(self.tweet.comments_count, 3)
+
+        # delete a comment will update comments_count
+        response = self.user2_client.delete(comment_url)
+        self.assertEqual(response.status_code, 200)
+        response = self.user1_client.get(tweet_url)
+        self.assertEqual(response.data['tweet']['comments_count'], 2)
+        self.tweet.refresh_from_db()
+        self.assertEqual(self.tweet.comments_count, 2)
+
+
