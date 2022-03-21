@@ -1,5 +1,6 @@
 from friendships.services import FriendshipService
 from newsfeeds.models import NewsFeed
+from newsfeeds.tasks import fan_out_to_followers_task
 from twitter.cache import USER_NEWSFEED_LIST_PATTERN
 from utils.redisUtils.redis_services import RedisService
 
@@ -8,18 +9,7 @@ class NewsFeedService:
 
     @classmethod
     def fan_out_to_followers(cls, tweet):
-        user = tweet.user
-        followers = FriendshipService.get_followers(user)
-        followers.append(user)
-        newsfeeds = [
-            NewsFeed(user=follower, tweet=tweet)
-            for follower in followers
-        ]
-
-        NewsFeed.objects.bulk_create(newsfeeds)
-
-        for newsfeed in newsfeeds:
-            cls.push_newsfeed_to_cache(newsfeed)
+        fan_out_to_followers_task.delay(tweet.id)
 
     @classmethod
     def get_cached_newsfeed_list(cls, user_id, queryset=None):
