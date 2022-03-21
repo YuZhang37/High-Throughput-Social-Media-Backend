@@ -49,6 +49,8 @@ class RedisService:
 
     @classmethod
     def incr_count_key(cls, instance, attr):
+        if instance is None:
+            return -1
         key = cls._get_count_key(instance, attr)
         redis_client = RedisClient.get_redis_client()
         if redis_client.exists(key):
@@ -60,6 +62,8 @@ class RedisService:
 
     @classmethod
     def decr_count_key(cls, instance, attr):
+        if instance is None:
+            return -1
         key = cls._get_count_key(instance, attr)
         redis_client = RedisClient.get_redis_client()
         if redis_client.exists(key):
@@ -71,6 +75,8 @@ class RedisService:
 
     @classmethod
     def get_count(cls, instance, attr):
+        if instance is None:
+            return -1
         key = cls._get_count_key(instance, attr)
         redis_client = RedisClient.get_redis_client()
         count = redis_client.get(key)

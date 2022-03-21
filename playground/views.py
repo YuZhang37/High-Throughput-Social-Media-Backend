@@ -7,6 +7,7 @@ from core import models
 from core.models import User
 from tweets.models import Tweet
 from twitter.cache import OBJECT_PATTERN
+from twitter.celery import debug_task
 
 
 def calculate():
@@ -17,17 +18,19 @@ def calculate():
 
 def say_hello(request):
 
-    print('get_user_model: ', get_user_model())
-    print('User', User)
-    print('Tweet', Tweet)
+    debug_task.delay()
 
-    print('User_name', User.__name__)
-    print('Tweet_name', Tweet.__name__)
-
-    print('User_str', User.__str__)
-    print('Tweet_str', Tweet.__str__)
-    key = OBJECT_PATTERN.format(class_name=get_user_model(), object_id=3)
-    print('key', key)
+    # print('get_user_model: ', get_user_model())
+    # print('User', User)
+    # print('Tweet', Tweet)
+    #
+    # print('User_name', User.__name__)
+    # print('Tweet_name', Tweet.__name__)
+    #
+    # print('User_str', User.__str__)
+    # print('Tweet_str', Tweet.__str__)
+    # key = OBJECT_PATTERN.format(class_name=get_user_model(), object_id=3)
+    # print('key', key)
     # key = USER_PATTERN.format(user_id=6)
     # cache.delete(key)
     # result = cache.get(key)
