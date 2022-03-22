@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-
+from kombu import Queue
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -211,7 +211,10 @@ CELERY_BROKER_URL = 'redis://127.0.0.1:6379/2' if not TESTING else 'redis://127.
 CELERY_TIMEZONE = "UTC"
 CELERY_TASK_ALWAYS_EAGER = TESTING
 
-
+CELERY_TASK_QUEUES = [
+    Queue(name='default', routing_key='default'),
+    Queue(name='newsfeeds', routing_key='newsfeeds'),
+]
 
 
 

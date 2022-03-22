@@ -16,7 +16,7 @@ class FollowingUserIdMixin:
             return {}
         if hasattr(self, '_cached_following_user_id_set'):
             return self._cached_following_user_id_set
-        following_user_id_set = FriendshipService.get_following_user_id_set(
+        following_user_id_set = FriendshipService.get_followings_id_set(
             from_user_id=self.context['request'].user.id
         )
         setattr(self, '_cached_following_user_id_set', following_user_id_set)
