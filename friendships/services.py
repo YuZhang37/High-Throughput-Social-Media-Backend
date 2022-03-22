@@ -21,20 +21,28 @@ class FriendshipService:
         return followers
 
     @classmethod
-    def get_following_user_id_set(cls, from_user_id):
+    def get_followings_id_set(cls, from_user_id):
         key = FOLLOWING_PATTERN.format(user_id=from_user_id)
         value = cache.get(key)
         if value is not None:
             return value
         friendships = Friendship.objects.filter(from_user=from_user_id)
-        following_user_id_set = set([
+        followings_id_set = set([
             # don't use friendship.to_user.id, N + 1 queries
             friendship.to_user_id for friendship in friendships
         ])
-        cache.set(key, following_user_id_set)
-        return following_user_id_set
+        cache.set(key, followings_id_set)
+        return followings_id_set
 
     @classmethod
     def invalidate_following_cache(cls, from_user_id):
         key = FOLLOWING_PATTERN.format(user_id=from_user_id)
         cache.delete(key)
+
+    @classmethod
+    def get_followers_id_list(cls, to_user_id):
+        friendships = Friendship.objects.filter(to_user=to_user_id)
+        followers_id_list = [
+            friendship.from_user_id for friendship in friendships
+        ]
+        return followers_id_list
