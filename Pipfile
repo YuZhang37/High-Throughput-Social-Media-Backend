@@ -15,6 +15,7 @@ pymemcache = "*"
 redis = "*"
 hiredis = "*"
 celery = "*"
+django-ratelimit = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
