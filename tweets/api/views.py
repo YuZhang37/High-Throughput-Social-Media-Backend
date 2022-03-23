@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.utils.decorators import method_decorator
+from ratelimit.decorators import ratelimit
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -28,7 +30,9 @@ class TweetViewSet(GenericViewSet):
             return [IsAuthenticated()]
         return [AllowAny()]
 
+    # may need to access the database if beyond the limit of the size cached list
     @required_params(params=['user_id'])
+    @method_decorator(ratelimit(key='user', rate='10/s', method='GET', block=True))
     def list(self, request: Request):
         user_id = request.query_params['user_id']
         if not get_user_model().objects.filter(id=user_id).exists():
@@ -49,6 +53,8 @@ class TweetViewSet(GenericViewSet):
         )
         return self.get_paginated_response(serializer.data)
 
+    @method_decorator(ratelimit(key='user', rate='10/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='user', rate='1/s', method='POST', block=True))
     def create(self, request: Request):
         serializer = TweetSerializerForCreate(
             data=request.data,
@@ -67,6 +73,8 @@ class TweetViewSet(GenericViewSet):
             status=status.HTTP_201_CREATED
         )
 
+    # the comments need to access the database
+    @method_decorator(ratelimit(key='user_or_ip', rate='5/s', method='GET', block=True))
     def retrieve(self, request: Request, pk):
         tweet = self.get_object()
         serializer = TweetSerializerWithDetail(

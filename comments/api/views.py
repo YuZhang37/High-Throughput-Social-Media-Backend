@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
+from ratelimit.decorators import ratelimit
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.request import Request
@@ -28,6 +30,7 @@ class CommentViewSet(viewsets.GenericViewSet):
             return [IsAuthenticated(), IsObjectOwner()]
         return [AllowAny()]
 
+    @method_decorator(ratelimit(key='user', rate='3/s', method='POST', block=True))
     def create(self, request: Request):
         serializer = CommentSerializerForCreate(
             data=request.data, context={'request': request}
@@ -47,6 +50,7 @@ class CommentViewSet(viewsets.GenericViewSet):
             ).data,
         }, status=status.HTTP_201_CREATED)
 
+    @method_decorator(ratelimit(key='user', rate='3/s', method='POST', block=True))
     def update(self, request: Request, pk):
         instance = self.get_object()
         serializer = CommentSerializerForUpdate(
@@ -66,6 +70,9 @@ class CommentViewSet(viewsets.GenericViewSet):
             ).data,
         }, status=status.HTTP_200_OK)
 
+    # destroy is easier than create and update, more frequently in a unit time,
+    # but a less frequent operation
+    @method_decorator(ratelimit(key='user', rate='5/s', method='POST', block=True))
     def destroy(self, request: Request, pk):
         instance = self.get_object()
         instance.delete()
@@ -74,6 +81,7 @@ class CommentViewSet(viewsets.GenericViewSet):
         }, status=status.HTTP_200_OK)
 
     @required_params(params=['tweet_id', ])
+    @method_decorator(ratelimit(key='user', rate='10/s', method='GET', block=True))
     def list(self, request: Request):
         # tweet_id = request.query_params['tweet_id']
         # comments = self.queryset.filter(tweet=tweet_id).order_by("created_at")

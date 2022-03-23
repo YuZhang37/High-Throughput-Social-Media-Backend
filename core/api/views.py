@@ -3,6 +3,8 @@ from django.contrib.auth import (
     login as django_login,
     authenticate as django_authenticate,
 )
+from django.utils.decorators import method_decorator
+from ratelimit.decorators import ratelimit
 
 from rest_framework import status, permissions
 from rest_framework.decorators import action
@@ -36,7 +38,9 @@ class AccountViewSet(viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    # request.user needs to access the database
     @action(methods=['GET', ], detail=False)
+    @method_decorator(ratelimit(key='ip', rate='3/s', method='GET', block=True))
     def login_status(self, request: Request):
         has_logged_in = request.user.is_authenticated
         data = {'has_logged_in': has_logged_in}
@@ -45,13 +49,16 @@ class AccountViewSet(viewsets.GenericViewSet):
             data['user'] = user_data
         return Response(data, status=status.HTTP_200_OK)
 
+    # all login logout signup need to access the database
     @action(methods=['POST'], detail=False)
+    @method_decorator(ratelimit(key='ip', rate='3/s', method='POST', block=True))
     def logout(self, request: Request):
         django_logout(request)
         return Response({"success": True, }, status=status.HTTP_200_OK)
 
     @action(methods=['POST'], detail=False,
             serializer_class=UserSerializerForLogin)
+    @method_decorator(ratelimit(key='ip', rate='3/s', method='POST', block=True))
     def login(self, request: Request):
         data = request.data
         serializer = UserSerializerForLogin(data=data)
@@ -79,6 +86,7 @@ class AccountViewSet(viewsets.GenericViewSet):
 
     @action(methods=['POST', ], detail=False,
             serializer_class=UserSerializerForSignup)
+    @method_decorator(ratelimit(key='ip', rate='3/s', method='POST', block=True))
     def signup(self, request: Request):
         data = request.data
         serializer = UserSerializerForSignup(data=data)

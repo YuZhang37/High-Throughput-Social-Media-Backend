@@ -162,6 +162,7 @@ REST_FRAMEWORK = {
     # it will affect the results from default mixin logics
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     # 'PAGE_SIZE': 50,
+    'EXCEPTION_HANDLER': 'utils.exceptions.custom_exception_handler'
 }
 
 AUTH_USER_MODEL = 'core.User'
@@ -189,6 +190,12 @@ CACHES = {
         'TIMEOUT': 86400,
         'KEY_PREFIX': 'testing',
     },
+    'ratelimit': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': '127.0.0.1:11211',
+        'TIMEOUT': 86400,
+        'KEY_PREFIX': 'ratelimit',
+    },
 }
 
 try:
@@ -215,6 +222,10 @@ CELERY_TASK_QUEUES = [
     Queue(name='default', routing_key='default'),
     Queue(name='newsfeeds', routing_key='newsfeeds'),
 ]
+
+RATELIMIT_ENABLE = not TESTING
+RATELIMIT_USE_CACHE = 'ratelimit'
+
 
 
 
