@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from django_hbase.hbase_client import HBaseClient
 from django_hbase.models.constants import INTEGER_FIELD_LENGTH
 from django_hbase.models.exceptions import (
@@ -13,7 +15,6 @@ from django_hbase.models.hbase_fields import HBaseField
 
 
 class HBaseModel:
-
     class Meta:
         table_name = None
         row_key = ()
@@ -31,12 +32,46 @@ class HBaseModel:
             setattr(self, key, value)
 
     @classmethod
-    def get_table(cls):
+    def get_table_name(cls):
         if cls.Meta.table_name is None:
             raise NotImplementedError('The table name is not specified.')
+        if settings.TESTING:
+            table_name = f'testing_{cls.Meta.table_name}'
+            return table_name
+        return cls.Meta.table_name
+
+    @classmethod
+    def get_table(cls):
+        table_name = cls.get_table_name()
         conn = HBaseClient.get_connection()
-        table = conn.table(cls.Meta.table_name)
+        table = conn.table(table_name)
         return table
+
+    @classmethod
+    def create_table(cls):
+        # if not settings.TESTING:
+        #     raise Exception("You can't create tables outside of unit tests")
+        conn = HBaseClient.get_connection()
+        tables = [table.decode('utf-8') for table in conn.tables()]
+        table_name = cls.get_table_name()
+        if table_name in tables:
+            return False
+        class_fields = cls.get_class_fields()
+        column_families = {
+            value.column_family: dict()
+            for value in class_fields.values()
+            if value.column_family is not None
+        }
+        conn.create_table(table_name, column_families)
+        return True
+
+    @classmethod
+    def drop_table(cls):
+        if not settings.TESTING:
+            raise Exception("You can't drop tables outside of unit tests")
+        conn = HBaseClient.get_connection()
+        table_name = cls.get_table_name()
+        conn.delete_table(table_name, disable=True)
 
     @classmethod
     def get_class_fields(cls):
@@ -97,7 +132,7 @@ class HBaseModel:
         return serialized_row_key
 
     @classmethod
-    def serialize_row_data(cls, instance_fields):
+    def serialize_row_data(cls, instance_fields, exist_row_data=None):
         """
         return map<bytes, bytes>
         """
@@ -109,7 +144,7 @@ class HBaseModel:
             value = instance_fields.get(key)
             if value is None:
                 value = field.default
-            if value is None and field.is_required:
+            if value is None and field.is_required and not exist_row_data:
                 raise EmptyColumnDataException(f"{key} is required.")
             if value is None:
                 continue
@@ -142,9 +177,17 @@ class HBaseModel:
         return values
 
     def save(self):
+        """
+        if lots of columns, only specify some of them, the specified columns
+        will be saved or updated, other columns won't be changed.
+        if some columns are required, and this is the first to create, do checking
+        for the required fields.
+        """
         table = self.get_table()
         serialized_row_key = self.serialize_row_key(self.__dict__)
-        serialized_row_data = self.serialize_row_data(self.__dict__)
+
+        exist_row_data = table.row(serialized_row_key)
+        serialized_row_data = self.serialize_row_data(self.__dict__, exist_row_data)
         if serialized_row_data is None:
             raise EmptyDataException("The column values are not provided.")
         table.put(serialized_row_key, serialized_row_data)
@@ -163,8 +206,8 @@ class HBaseModel:
         table = cls.get_table()
         serialized_row_key = cls.serialize_row_key(kwargs)
         serialized_row_data = table.row(row=serialized_row_key)
+        if not serialized_row_data:
+            return None
         deserialized_row_data = cls.deserialize_row_data(serialized_row_data)
         instance = cls(**kwargs, **deserialized_row_data)
         return instance
-
-
