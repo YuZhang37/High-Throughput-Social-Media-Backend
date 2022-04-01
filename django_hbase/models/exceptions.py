@@ -21,5 +21,10 @@ class EmptyColumnDataException(Exception):
 class FieldTypeException(Exception):
     pass
 
+
 class BadColumnKeyException(Exception):
+    pass
+
+
+class WrongArgumentException(Exception):
     pass
