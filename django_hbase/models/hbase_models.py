@@ -1,7 +1,7 @@
 from django.conf import settings
 
 from django_hbase.hbase_client import HBaseClient
-from django_hbase.models.constants import INTEGER_FIELD_LENGTH
+from django_hbase.models.constants import INTEGER_FIELD_LENGTH, ENCODING
 from django_hbase.models.exceptions import (
     EmptyRowKeyException,
     RowKeyNotInitializedException,
@@ -9,7 +9,7 @@ from django_hbase.models.exceptions import (
     EmptyDataException,
     EmptyColumnDataException,
     FieldTypeException,
-    BadColumnKeyException,
+    BadColumnKeyException, WrongArgumentException,
 )
 from django_hbase.models.hbase_fields import HBaseField
 
@@ -52,7 +52,7 @@ class HBaseModel:
         # if not settings.TESTING:
         #     raise Exception("You can't create tables outside of unit tests")
         conn = HBaseClient.get_connection()
-        tables = [table.decode('utf-8') for table in conn.tables()]
+        tables = [table.decode(ENCODING) for table in conn.tables()]
         table_name = cls.get_table_name()
         if table_name in tables:
             return False
@@ -111,7 +111,7 @@ class HBaseModel:
         return value
 
     @classmethod
-    def serialize_row_key(cls, instance_fields):
+    def serialize_row_key(cls, instance_fields, is_prefix=False):
         """
         fields_data is the instance.__dict__: map<String, value>
         """
@@ -125,11 +125,31 @@ class HBaseModel:
                 raise RowKeyNotDefinedException("The row key is not defined.")
             field_data = instance_fields.get(key)
             if field_data is None:
+                if is_prefix:
+                    break
                 raise RowKeyNotInitializedException(f"{key} is not provided.")
             value = cls.serialize_field_to_str(field, field_data)
             values.append(value)
-        serialized_row_key = bytes(":".join(values), 'utf-8')
+        serialized_row_key = bytes(":".join(values), ENCODING)
         return serialized_row_key
+
+    @classmethod
+    def deserialize_row_key(cls, serialized_row_key):
+        """
+        return a dict
+        """
+        row_key = str(serialized_row_key, encoding=ENCODING)
+        values = row_key.split(':')
+        index = 0
+        results = {}
+        class_fields = cls.get_class_fields()
+        for key in cls.Meta.row_key:
+            field = class_fields.get(key)
+            str_value = values[index]
+            index += 1
+            value = cls.deserialize_field(field=field, str_value=str_value)
+            results[key] = value
+        return results
 
     @classmethod
     def serialize_row_data(cls, instance_fields, exist_row_data=None):
@@ -151,8 +171,8 @@ class HBaseModel:
             if ":" in key:
                 raise BadColumnKeyException(": is not allowed in column keys.")
             str_value = cls.serialize_field_to_str(field, value)
-            column_key = (field.column_family + ":" + key).encode('utf-8')
-            values[column_key] = str_value.encode('utf-8')
+            column_key = (field.column_family + ":" + key).encode(ENCODING)
+            values[column_key] = str_value.encode(ENCODING)
         if not values:
             return None
         return values
@@ -168,10 +188,10 @@ class HBaseModel:
             if field.column_family is None:
                 continue
             column_key = field.column_family + ":" + key
-            serialized_value = serialized_row_data.get(column_key.encode('utf-8'))
+            serialized_value = serialized_row_data.get(column_key.encode(ENCODING))
             if serialized_value is None:
                 continue
-            value = serialized_value.decode('utf-8')
+            value = serialized_value.decode(ENCODING)
             deserialized_value = cls.deserialize_field(field, value)
             values[key] = deserialized_value
         return values
@@ -211,3 +231,36 @@ class HBaseModel:
         deserialized_row_data = cls.deserialize_row_data(serialized_row_data)
         instance = cls(**kwargs, **deserialized_row_data)
         return instance
+
+    @classmethod
+    def filter(cls, start=None, stop=None, prefix=None, limit=None, reverse=False):
+        """
+        start and stop and prefix are dict
+        start/stop can't be specified if prefix is specified
+        """
+        row_start = cls.serialize_row_key(start) if start else None
+        row_stop = cls.serialize_row_key(stop) if stop else None
+        row_prefix = cls.serialize_row_key(prefix, is_prefix=True) if prefix else None
+
+        if (row_start or row_stop) and row_prefix:
+            raise WrongArgumentException("start/stop can't be used together with prefix")
+
+        table = cls.get_table()
+        rows = table.scan(
+            row_start=row_start,
+            row_stop=row_stop,
+            row_prefix=row_prefix,
+            limit=limit,
+            reverse=reverse
+        )
+
+        results = []
+        for row_key, row_data in rows:
+            deserialized_row_key = cls.deserialize_row_key(row_key)
+            deserialized_row_data = cls.deserialize_row_data(row_data)
+            instance = cls(**deserialized_row_key, **deserialized_row_data)
+            results.append(instance)
+        return results
+
+
+
