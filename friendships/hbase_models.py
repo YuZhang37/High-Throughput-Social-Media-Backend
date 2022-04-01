@@ -3,11 +3,11 @@ from django_hbase import models
 
 class HBaseFollowing(models.HBaseModel):
     from_user_id = models.IntegerField(reverse=True)
-    to_user_id = models.IntegerField(column_family='cf')
+    to_user_id = models.IntegerField(column_family='following')
     created_at = models.TimestampField()
 
     class Meta:
-        table_name = 'friendship_following'
+        table_name = 'friendship_followings'
         row_key = ('from_user_id', 'created_at')
 
     def __str__(self):
@@ -20,11 +20,11 @@ class HBaseFollowing(models.HBaseModel):
 
 class HBaseFollower(models.HBaseModel):
     to_user_id = models.IntegerField(reverse=True)
-    from_user_id = models.IntegerField(column_family='cf')
+    from_user_id = models.IntegerField(column_family='follower')
     created_at = models.TimestampField()
 
     class Meta:
-        table_name = 'friendship_follower'
+        table_name = 'friendship_followers'
         row_key = ('to_user_id', 'created_at')
 
     def __str__(self):
