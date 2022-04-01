@@ -1,3 +1,5 @@
+import time
+
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.shortcuts import render
@@ -5,6 +7,7 @@ from rest_framework import viewsets
 
 from core import models
 from core.models import User
+from friendships.hbase_models import HBaseFollower, HBaseFollowing
 from tweets.models import Tweet
 from twitter.cache import OBJECT_PATTERN
 from twitter.celery import debug_task
@@ -18,7 +21,26 @@ def calculate():
 
 def say_hello(request):
 
-    debug_task.delay()
+    print('first test:')
+    t = time.time()
+    t = int(t * 1000000)
+    print(f'from_user_id: 1, to_user_id:2, created_at: {t}')
+    HBaseFollower.create(from_user_id=1, to_user_id=2, created_at=t)
+    row = HBaseFollower.get(to_user_id=2, created_at=t)
+    print(row)
+    time.sleep(2)
+
+    print('second test:')
+    t2 = time.time()
+    t2 = int(t2 * 1000000)
+    print(f'from_user_id: 10, to_user_id:20, created_at: {t2}')
+    hbase_follower = HBaseFollower(from_user_id=10, to_user_id=20, created_at=t2)
+    hbase_follower.save()
+    row = HBaseFollower.get(to_user_id=20, created_at=t2)
+    print(row)
+
+
+    # debug_task.delay()
 
     # print('get_user_model: ', get_user_model())
     # print('User', User)

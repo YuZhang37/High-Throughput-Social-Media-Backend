@@ -16,6 +16,7 @@ redis = "*"
 hiredis = "*"
 celery = "*"
 django-ratelimit = "*"
+happybase = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
