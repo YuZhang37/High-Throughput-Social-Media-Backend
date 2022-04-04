@@ -14,18 +14,18 @@ class RedisService:
             serialized_obj = RedisModelSerializer.serialize(obj)
             serialized_objects.append(serialized_obj)
         if serialized_objects:
-            redis_client = RedisClient.get_redis_client()
-            redis_client.rpush(key, *serialized_objects)
-            redis_client.expire(key, settings.REDIS_KEY_EXPIRE_TIME)
+            conn = RedisClient.get_connection()
+            conn.rpush(key, *serialized_objects)
+            conn.expire(key, settings.REDIS_KEY_EXPIRE_TIME)
         return limited_queryset
 
     @classmethod
     def get_objects(cls, key, queryset):
-        redis_client = RedisClient.get_redis_client()
-        if not redis_client.exists(key):
+        conn = RedisClient.get_connection()
+        if not conn.exists(key):
             deserialized_objects = cls._load_objects(key, queryset)
             return deserialized_objects
-        objects = redis_client.lrange(key, 0, -1)
+        objects = conn.lrange(key, 0, -1)
         deserialized_objects = []
         for obj in objects:
             deserialized_object = RedisModelSerializer.deserialize(obj)
@@ -34,13 +34,13 @@ class RedisService:
 
     @classmethod
     def push_object(cls, key, obj, queryset):
-        redis_client = RedisClient.get_redis_client()
+        conn = RedisClient.get_connection()
         serialized_obj = RedisModelSerializer.serialize(obj)
-        if not redis_client.exists(key):
+        if not conn.exists(key):
             cls._load_objects(key, queryset)
             return
-        redis_client.lpush(key, serialized_obj)
-        redis_client.ltrim(key, 0, settings.REDIS_CACHED_LIST_LIMIT_LENGTH - 1)
+        conn.lpush(key, serialized_obj)
+        conn.ltrim(key, 0, settings.REDIS_CACHED_LIST_LIMIT_LENGTH - 1)
 
     @classmethod
     def _get_count_key(cls, instance, attr):
@@ -52,12 +52,12 @@ class RedisService:
         if instance is None:
             return -1
         key = cls._get_count_key(instance, attr)
-        redis_client = RedisClient.get_redis_client()
-        if redis_client.exists(key):
-            return redis_client.incr(key)
+        conn = RedisClient.get_connection()
+        if conn.exists(key):
+            return conn.incr(key)
 
         count = getattr(instance, attr)
-        redis_client.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
+        conn.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
         return count
 
     @classmethod
@@ -65,12 +65,12 @@ class RedisService:
         if instance is None:
             return -1
         key = cls._get_count_key(instance, attr)
-        redis_client = RedisClient.get_redis_client()
-        if redis_client.exists(key):
-            return redis_client.decr(key)
+        conn = RedisClient.get_connection()
+        if conn.exists(key):
+            return conn.decr(key)
 
         count = getattr(instance, attr)
-        redis_client.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
+        conn.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
         return count
 
     @classmethod
@@ -78,12 +78,12 @@ class RedisService:
         if instance is None:
             return -1
         key = cls._get_count_key(instance, attr)
-        redis_client = RedisClient.get_redis_client()
-        count = redis_client.get(key)
+        conn = RedisClient.get_connection()
+        count = conn.get(key)
         if count is not None:
             return int(count)
         count = getattr(instance, attr)
-        redis_client.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
+        conn.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
         return count
 
 
