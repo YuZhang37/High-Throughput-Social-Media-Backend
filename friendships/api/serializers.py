@@ -16,7 +16,7 @@ class BaseFriendshipSerializer(serializers.Serializer):
     def create(self, validated_data):
         pass
 
-    def _following_user_id_set(self):
+    def _get_following_user_id_set(self):
         if self.context['request'].user.is_anonymous:
             return {}
         if hasattr(self, '_cached_following_user_id_set'):
@@ -39,7 +39,7 @@ class BaseFriendshipSerializer(serializers.Serializer):
         return obj.created_at
 
     def get_has_followed(self, obj):
-        following_user_id_set = self._following_user_id_set()
+        following_user_id_set = self._get_following_user_id_set()
         return self.get_user_id(obj) in following_user_id_set
 
 

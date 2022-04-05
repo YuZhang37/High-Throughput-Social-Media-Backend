@@ -12,7 +12,8 @@ from rest_framework.viewsets import GenericViewSet
 from friendships.api.paginations import FriendshipPagination
 from friendships.api.serializers import (
     FriendshipSerializerForFollowers,
-    FriendshipSerializerForFollowings, FriendshipSerializerForCreate,
+    FriendshipSerializerForFollowings,
+    FriendshipSerializerForCreate,
 )
 from friendships.models import Friendship
 
