@@ -37,20 +37,6 @@ class Friendship(models.Model):
     def __str__(self):
         return f'{self.from_user} follows {self.to_user}'
 
-    @property
-    def cached_from_user(self):
-        user = MemcachedService.get_object_from_cache(
-            model_class=get_user_model(), object_id=self.from_user_id
-        )
-        return user
-
-    @property
-    def cached_to_user(self):
-        user = MemcachedService.get_object_from_cache(
-            model_class=get_user_model(), object_id=self.to_user_id
-        )
-        return user
-
 
 post_save.connect(friendship_changed, sender=Friendship)
 pre_delete.connect(friendship_changed, sender=Friendship)
