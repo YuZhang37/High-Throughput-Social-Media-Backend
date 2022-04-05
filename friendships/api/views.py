@@ -11,18 +11,16 @@ from rest_framework.viewsets import GenericViewSet
 
 from friendships.api.paginations import FriendshipPagination
 from friendships.api.serializers import (
-    EmptyFriendshipSerializer,
     FriendshipSerializerForFollowers,
-    FriendshipSerializerForFollowings,
+    FriendshipSerializerForFollowings, FriendshipSerializerForCreate,
 )
 from friendships.models import Friendship
-from friendships.services import FriendshipService
 
 
 class FriendshipViewSet(GenericViewSet):
 
     queryset = get_user_model().objects.all()
-    serializer_class = EmptyFriendshipSerializer
+    serializer_class = FriendshipSerializerForCreate
     pagination_class = FriendshipPagination
 
     # followers and followings need to access the database, less frequent operations
@@ -69,11 +67,15 @@ class FriendshipViewSet(GenericViewSet):
                 "success": True,
                 "duplicate": True,
             }, status=status.HTTP_201_CREATED)
-        friendship = Friendship.objects.create(
-            from_user=from_user, to_user=to_user
-        )
-        # data = {'from_usr': from_user_id, 'to_user': to_user_id}
-        # serializer = FriendshipSerializerForFollow(data=data)
+
+        data = {'from_user_id': from_user.id, 'to_user_id': to_user.id}
+        serializer = FriendshipSerializerForCreate(data=data)
+        if not serializer.is_valid():
+            return Response({
+                "success": False,
+                "message": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        friendship = serializer.save()
         return Response({
             "success": True,
             "following": FriendshipSerializerForFollowings(

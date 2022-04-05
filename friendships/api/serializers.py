@@ -1,17 +1,22 @@
 from rest_framework import serializers
 
 from core.api.serializers import SimpleUserSerializerWithEmail
-from friendships.models import Friendship
+from core.services import UserService
 from friendships.services import FriendshipService
 
 
-class FollowingUserIdMixin:
+class BaseFriendshipSerializer(serializers.Serializer):
+    user = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    has_followed = serializers.SerializerMethodField()
 
-    # object-level caching is important for following_user_id_set, since
-    # in one query, we will serialize lots of friendships,
-    # has_followed will be referenced to many times.
-    @property
-    def following_user_id_set(self: serializers.ModelSerializer):
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
+
+    def _following_user_id_set(self):
         if self.context['request'].user.is_anonymous:
             return {}
         if hasattr(self, '_cached_following_user_id_set'):
@@ -22,39 +27,45 @@ class FollowingUserIdMixin:
         setattr(self, '_cached_following_user_id_set', following_user_id_set)
         return following_user_id_set
 
+    def get_user_id(self, obj):
+        raise NotImplementedError
 
-class EmptyFriendshipSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Friendship
-        fields = []
+    def get_user(self, obj):
+        user = UserService.get_user_from_cache_with_user_id(self.get_user_id(obj))
+        serializer = SimpleUserSerializerWithEmail(instance=user)
+        return serializer.data
 
-
-class FriendshipSerializerForFollowers(
-    serializers.ModelSerializer,
-    FollowingUserIdMixin,
-):
-    user = SimpleUserSerializerWithEmail(source='cached_from_user')
-    has_followed = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Friendship
-        fields = ['user', 'created_at', 'has_followed']
+    def get_created_at(self, obj):
+        return obj.created_at
 
     def get_has_followed(self, obj):
-        # can't use obj.from_user.id, it will issue a query
-        return obj.from_user_id in self.following_user_id_set
+        following_user_id_set = self._following_user_id_set()
+        return self.get_user_id(obj) in following_user_id_set
 
 
-class FriendshipSerializerForFollowings(
-    serializers.ModelSerializer,
-    FollowingUserIdMixin,
-):
-    user = SimpleUserSerializerWithEmail(source='cached_to_user')
-    has_followed = serializers.SerializerMethodField()
+class FriendshipSerializerForFollowers(BaseFriendshipSerializer):
 
-    class Meta:
-        model = Friendship
-        fields = ['user', 'created_at', 'has_followed']
+    def get_user_id(self, obj):
+        return obj.from_user_id
 
-    def get_has_followed(self, obj):
-        return obj.to_user_id in self.following_user_id_set
+
+class FriendshipSerializerForFollowings(BaseFriendshipSerializer):
+
+    def get_user_id(self, obj):
+        return obj.to_user_id
+
+
+class FriendshipSerializerForCreate(serializers.Serializer):
+    from_user_id = serializers.IntegerField()
+    to_user_id = serializers.IntegerField()
+
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        friendship = FriendshipService.follow(
+            **validated_data
+        )
+        return friendship
+
+
