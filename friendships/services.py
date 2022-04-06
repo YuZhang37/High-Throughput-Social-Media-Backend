@@ -91,7 +91,7 @@ class FriendshipService:
             from_user_id=from_user_id, created_at=instance.created_at
         )
         HBaseFollower.delete(
-            form_user_id=from_user_id, created_at=instance.created_at
+            to_user_id=to_user_id, created_at=instance.created_at
         )
         return 1
 
@@ -118,3 +118,12 @@ class FriendshipService:
             from_user_id=from_user_id, to_user_id=to_user_id
         )
         return instance is not None
+
+    @classmethod
+    def get_following_count(cls, from_user_id):
+        if not GateKeeper.is_switch_on(SWITCH_FRIENDSHIP_TO_HBASE):
+            count = Friendship.objects.filter(from_user_id=from_user_id).count()
+        else:
+            instances = HBaseFollowing.filter(prefix={'from_user_id':from_user_id})
+            count = len(instances)
+        return count

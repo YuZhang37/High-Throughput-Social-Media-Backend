@@ -79,7 +79,7 @@ class EndlessPaginationForFriendship(EndlessPagination):
     def paginate_hbase_for_friendship(self, hbase_model, request, key_prefix):
         self.has_next_page = False
         if 'created_at__gt' in request.query_params:
-            created_at__gt = request.query_params['created_at__gt']
+            created_at__gt = int(request.query_params['created_at__gt'])
             start_row = {
                 hbase_model.Meta.row_key[0]: key_prefix,
                 hbase_model.Meta.row_key[1]: MAX_TIMESTAMP
@@ -96,7 +96,7 @@ class EndlessPaginationForFriendship(EndlessPagination):
             return instances
 
         if 'created_at__lt' in request.query_params:
-            created_at__lt = request.query_params['created_at__lt']
+            created_at__lt = int(request.query_params['created_at__lt'])
             start_row = {
                 hbase_model.Meta.row_key[0]: key_prefix,
                 hbase_model.Meta.row_key[1]: created_at__lt
@@ -111,7 +111,7 @@ class EndlessPaginationForFriendship(EndlessPagination):
                 limit=self.page_size + 2,
                 reverse=True,
             )
-            if len(instances) and instances[-1].created_at == created_at__lt:
+            if len(instances) and instances[0].created_at == created_at__lt:
                 instances = instances[1:]
             if len(instances) > self.page_size:
                 self.has_next_page = True

@@ -1,6 +1,5 @@
 from gatekeeper.constants import GATEKEEPER_PREFIX
 from utils.redisUtils.redis_client import RedisClient
-from utils.redisUtils.redis_services import RedisService
 
 
 class GateKeeper:
