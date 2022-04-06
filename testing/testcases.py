@@ -7,6 +7,9 @@ from rest_framework.test import APIClient
 from comments.models import Comment
 from django_hbase.models import HBaseModel
 from friendships.models import Friendship
+from friendships.services import FriendshipService
+from gatekeeper.gate_keeper import GateKeeper
+from gatekeeper.service_names import SWITCH_FRIENDSHIP_TO_HBASE
 from likes.models import Like
 from newsfeeds.models import NewsFeed
 from tweets.models import Tweet
@@ -18,6 +21,7 @@ class TestCase(DjangoTestCase):
 
     def setUp(self):
         self.clear_cache()
+        GateKeeper.set_kv(SWITCH_FRIENDSHIP_TO_HBASE, 'percentage', 100)
         try:
             self.hbase_tables_created = True
             for model_class in HBaseModel.__subclasses__():
@@ -84,4 +88,6 @@ class TestCase(DjangoTestCase):
         return NewsFeed.objects.create(user=user, tweet=tweet)
 
     def create_friendship(self, from_user, to_user):
-        return Friendship.objects.create(from_user=from_user, to_user=to_user)
+        return FriendshipService.follow(
+            from_user_id=from_user.id, to_user_id=to_user.id
+        )

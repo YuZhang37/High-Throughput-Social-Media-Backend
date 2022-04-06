@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.pagination import BasePagination
 from rest_framework.response import Response
 from dateutil import parser
+from utils.time_constants import MAX_TIMESTAMP, MIN_TIMESTAMP
 
 
 class EndlessPagination(BasePagination):
@@ -71,3 +72,65 @@ class EndlessPagination(BasePagination):
             'has_next_page': self.has_next_page,
             'results': data,
         }, status=status.HTTP_200_OK)
+
+
+class EndlessPaginationForFriendship(EndlessPagination):
+
+    def paginate_hbase_for_friendship(self, hbase_model, request, key_prefix):
+        self.has_next_page = False
+        if 'created_at__gt' in request.query_params:
+            created_at__gt = int(request.query_params['created_at__gt'])
+            start_row = {
+                hbase_model.Meta.row_key[0]: key_prefix,
+                hbase_model.Meta.row_key[1]: MAX_TIMESTAMP
+            }
+            stop_row = {
+                hbase_model.Meta.row_key[0]: key_prefix,
+                hbase_model.Meta.row_key[1]: created_at__gt
+            }
+            instances = hbase_model.filter(
+                start=start_row, stop=stop_row, reverse=True
+            )
+            if len(instances) and instances[-1].created_at == created_at__gt:
+                instances = instances[:-1]
+            return instances
+
+        if 'created_at__lt' in request.query_params:
+            created_at__lt = int(request.query_params['created_at__lt'])
+            start_row = {
+                hbase_model.Meta.row_key[0]: key_prefix,
+                hbase_model.Meta.row_key[1]: created_at__lt
+            }
+            stop_row = {
+                hbase_model.Meta.row_key[0]: key_prefix,
+                hbase_model.Meta.row_key[1]: MIN_TIMESTAMP
+            }
+            instances = hbase_model.filter(
+                start=start_row,
+                stop=stop_row,
+                limit=self.page_size + 2,
+                reverse=True,
+            )
+            if len(instances) and instances[0].created_at == created_at__lt:
+                instances = instances[1:]
+            if len(instances) > self.page_size:
+                self.has_next_page = True
+            return instances[:self.page_size]
+
+        start_row = {
+            hbase_model.Meta.row_key[0]: key_prefix,
+            hbase_model.Meta.row_key[1]: MAX_TIMESTAMP
+        }
+        stop_row = {
+            hbase_model.Meta.row_key[0]: key_prefix,
+            hbase_model.Meta.row_key[1]: 0
+        }
+        instances = hbase_model.filter(
+            start=start_row,
+            stop=stop_row,
+            limit=self.page_size + 1,
+            reverse=True,
+        )
+        if len(instances) > self.page_size:
+            self.has_next_page = True
+        return instances[:self.page_size]

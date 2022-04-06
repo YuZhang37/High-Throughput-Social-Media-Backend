@@ -233,6 +233,12 @@ class HBaseModel:
         return instance
 
     @classmethod
+    def delete(cls, **kwargs):
+        table = cls.get_table()
+        serialized_row_key = cls.serialize_row_key(kwargs)
+        table.delete(serialized_row_key)
+
+    @classmethod
     def filter(cls, start=None, stop=None, prefix=None, limit=None, reverse=False):
         """
         start and stop and prefix are dict
