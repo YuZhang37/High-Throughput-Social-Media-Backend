@@ -1,18 +1,6 @@
-import logging
-import time
-
 import happybase
-from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.shortcuts import render
 from rest_framework import viewsets
-
-from core import models
-from core.models import User
-from friendships.hbase_models import HBaseFollower, HBaseFollowing
-from tweets.models import Tweet
-from twitter.cache import OBJECT_PATTERN
-from twitter.celery import debug_task
 
 
 def calculate():
