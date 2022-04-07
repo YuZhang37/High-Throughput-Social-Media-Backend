@@ -3,7 +3,7 @@ import time
 from django.conf import settings
 from django.core.cache import caches
 
-from friendships.hbase_models import HBaseFollowing, HBaseFollower
+from friendships.models import HBaseFollowing, HBaseFollower
 from friendships.models import Friendship
 from gatekeeper.gate_keeper import GateKeeper
 from gatekeeper.service_names import SWITCH_FRIENDSHIP_TO_HBASE

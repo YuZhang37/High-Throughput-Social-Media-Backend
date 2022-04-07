@@ -219,6 +219,17 @@ class HBaseModel:
         return instance
 
     @classmethod
+    def batch_create(cls, instances):
+        table = cls.get_table()
+        batch = table.batch()
+        for instance in instances:
+            row_key = cls.serialize_row_key(instance.__dict__)
+            row_data = cls.serialize_row_data(instance.__dict__)
+            batch.put(row_key, row_data)
+        batch.send()
+        return instances
+
+    @classmethod
     def get(cls, **kwargs):
         """
         only supports querying with row key

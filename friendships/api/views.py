@@ -13,7 +13,7 @@ from friendships.api.serializers import (
     FriendshipSerializerForFollowings,
     FriendshipSerializerForCreate,
 )
-from friendships.hbase_models import HBaseFollower, HBaseFollowing
+from friendships.models import HBaseFollower, HBaseFollowing
 from friendships.models import Friendship
 from friendships.services import FriendshipService
 from gatekeeper.gate_keeper import GateKeeper

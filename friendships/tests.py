@@ -1,8 +1,7 @@
 import time
 
-from django_hbase.models import EmptyDataException, RowKeyNotInitializedException, EmptyColumnDataException
-from friendships.hbase_models import HBaseFollower, HBaseFollowing
-from friendships.models import Friendship
+from django_hbase.models import RowKeyNotInitializedException, EmptyColumnDataException
+from friendships.models import HBaseFollower, HBaseFollowing
 from friendships.services import FriendshipService
 from testing.testcases import TestCase
 
