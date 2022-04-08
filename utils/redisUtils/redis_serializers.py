@@ -3,7 +3,6 @@ import json
 from django.core import serializers
 
 from django_hbase.models import HBaseModel
-from newsfeeds.models import HBaseNewsfeed
 from utils.redisUtils.json_encoder import JSONEncoder
 
 

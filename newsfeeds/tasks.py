@@ -2,7 +2,6 @@ from celery import shared_task
 
 from friendships.services import FriendshipService
 from newsfeeds.constants import NEWSFEED_FANOUT_BATCH_SIZE
-from newsfeeds.models import NewsFeed
 from newsfeeds.services import NewsFeedService
 from utils.time_constants import ONE_HOUR
 
@@ -10,8 +9,9 @@ from utils.time_constants import ONE_HOUR
 @shared_task(routing_key='newsfeeds', time_limit=ONE_HOUR)
 def fanout_newsfeeds_batch_task(tweet_id, followers_id_list, created_at):
     from newsfeeds.services import NewsFeedService
+    model_class = NewsFeedService.get_model_class()
     newsfeeds = [
-        NewsFeedService.create_newsfeed(
+        model_class(
             user_id=follower_id, tweet_id=tweet_id, created_at=created_at
         )
         for follower_id in followers_id_list
