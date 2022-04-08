@@ -23,15 +23,26 @@ class TweetPhotoService:
 class TweetService:
 
     @classmethod
+    def _lazy_load_tweets(cls, user_id):
+        def _lazy_tweets(size):
+            queryset = Tweet.objects.filter(user_id=user_id) \
+                           .order_by('-created_at')[:size]
+            return queryset
+        return _lazy_tweets
+
+    @classmethod
     def get_cached_tweets(cls, user_id, queryset=None):
-        if not queryset:
-            queryset = Tweet.objects.filter(user=user_id).order_by("-created_at")
+        get_tweets = cls._lazy_load_tweets(user_id=user_id)
         key = USER_TWEET_LIST_PATTERN.format(user_id=user_id)
-        tweets = RedisService.get_objects(key, queryset)
+        tweets = RedisService.get_objects(
+            key=key, get_objects=get_tweets
+        )
         return tweets
 
     @classmethod
     def push_tweet_to_cache(cls, tweet):
-        queryset = Tweet.objects.filter(user=tweet.user_id).order_by("-created_at")
         key = USER_TWEET_LIST_PATTERN.format(user_id=tweet.user_id)
-        RedisService.push_object(key, tweet, queryset)
+        get_tweets = cls._lazy_load_tweets(user_id=tweet.user_id)
+        RedisService.push_object(
+            key=key, obj=tweet, get_objects=get_tweets,
+        )

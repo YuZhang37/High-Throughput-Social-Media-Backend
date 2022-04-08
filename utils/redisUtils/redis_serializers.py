@@ -1,4 +1,9 @@
+import json
+
 from django.core import serializers
+
+from django_hbase.models import HBaseModel
+from newsfeeds.models import HBaseNewsfeed
 from utils.redisUtils.json_encoder import JSONEncoder
 
 
@@ -14,3 +19,30 @@ class RedisModelSerializer:
         objs = serializers.deserialize('json', data)
         model_obj = list(objs)[0].object
         return model_obj
+
+
+class RedisHBaseSerializer:
+
+    @classmethod
+    def get_hbase_model(cls, model_name):
+        for subclass in HBaseModel.__subclasses__():
+            if subclass.__name__ == model_name:
+                return subclass
+        raise Exception(f'hbase model of {model_name} does not exist')
+
+    @classmethod
+    def serialize(cls, obj):
+        data = {'model_name': obj.__class__.__name__}
+        for key in obj.get_class_fields():
+            value = obj.__dict__.get(key)
+            data[key] = value
+        return json.dumps(data)
+
+    @classmethod
+    def deserialize(cls, serialized_data):
+        data = json.loads(serialized_data)
+        hbase_model = cls.get_hbase_model(data['model_name'])
+        del data['model_name']
+        obj = hbase_model(**data)
+        return obj
+

@@ -7,11 +7,13 @@ from utils.redisUtils.redis_serializers import RedisModelSerializer
 class RedisService:
 
     @classmethod
-    def _load_objects(cls, key, queryset):
+    def _load_objects(cls, key, get_objects, serializer=RedisModelSerializer):
         serialized_objects = []
-        limited_queryset = list(queryset[:settings.REDIS_CACHED_LIST_LIMIT_LENGTH])
+        limited_queryset = list(
+            get_objects(settings.REDIS_CACHED_LIST_LIMIT_LENGTH)
+        )
         for obj in limited_queryset:
-            serialized_obj = RedisModelSerializer.serialize(obj)
+            serialized_obj = serializer.serialize(obj)
             serialized_objects.append(serialized_obj)
         if serialized_objects:
             conn = RedisClient.get_connection()
@@ -20,24 +22,24 @@ class RedisService:
         return limited_queryset
 
     @classmethod
-    def get_objects(cls, key, queryset):
+    def get_objects(cls, key, get_objects, serializer=RedisModelSerializer):
         conn = RedisClient.get_connection()
         if not conn.exists(key):
-            deserialized_objects = cls._load_objects(key, queryset)
+            deserialized_objects = cls._load_objects(key, get_objects, serializer)
             return deserialized_objects
         objects = conn.lrange(key, 0, -1)
         deserialized_objects = []
         for obj in objects:
-            deserialized_object = RedisModelSerializer.deserialize(obj)
+            deserialized_object = serializer.deserialize(obj)
             deserialized_objects.append(deserialized_object)
         return deserialized_objects
 
     @classmethod
-    def push_object(cls, key, obj, queryset):
+    def push_object(cls, key, obj, get_objects, serializer=RedisModelSerializer):
         conn = RedisClient.get_connection()
-        serialized_obj = RedisModelSerializer.serialize(obj)
+        serialized_obj = serializer.serialize(obj)
         if not conn.exists(key):
-            cls._load_objects(key, queryset)
+            cls._load_objects(key, get_objects)
             return
         conn.lpush(key, serialized_obj)
         conn.ltrim(key, 0, settings.REDIS_CACHED_LIST_LIMIT_LENGTH - 1)

@@ -39,12 +39,12 @@ class TweetViewSet(GenericViewSet):
             return Response({
                 "message": "user doesn't exist",
             }, status=status.HTTP_400_BAD_REQUEST)
-        queryset = Tweet.objects.filter(user_id=user_id).order_by('-created_at')
-        tweet_list = TweetService.get_cached_tweets(user_id, queryset=queryset)
+        tweet_list = TweetService.get_cached_tweets(user_id)
         page = self.paginator.paginate_cached_list_with_limited_size(
             tweet_list, request
         )
         if not page:
+            queryset = Tweet.objects.filter(user_id=user_id).order_by('-created_at')
             page = self.paginate_queryset(queryset)
         serializer = TweetSerializer(
             page,

@@ -18,14 +18,14 @@ from friendships.models import Friendship
 from friendships.services import FriendshipService
 from gatekeeper.gate_keeper import GateKeeper
 from gatekeeper.service_names import SWITCH_FRIENDSHIP_TO_HBASE
-from utils.paginations import EndlessPaginationForFriendship
+from utils.paginations import EndlessPagination
 
 
 class FriendshipViewSet(GenericViewSet):
 
     queryset = get_user_model().objects.all()
     serializer_class = FriendshipSerializerForCreate
-    pagination_class = EndlessPaginationForFriendship
+    pagination_class = EndlessPagination
 
     # followers and followings need to access the database, less frequent operations
     
@@ -43,7 +43,7 @@ class FriendshipViewSet(GenericViewSet):
             friendships = Friendship.objects.filter(to_user=pk).order_by('-created_at')
             page = self.paginate_queryset(friendships)
         else:
-            page = self.paginator.paginate_hbase_for_friendship(
+            page = self.paginator.paginate_hbase(
                 hbase_model=HBaseFollower, request=request, key_prefix=pk
             )
         serializer = FriendshipSerializerForFollowers(
@@ -65,7 +65,7 @@ class FriendshipViewSet(GenericViewSet):
             friendships = Friendship.objects.filter(from_user=pk).order_by('-created_at')
             page = self.paginate_queryset(friendships)
         else:
-            page = self.paginator.paginate_hbase_for_friendship(
+            page = self.paginator.paginate_hbase(
                 hbase_model=HBaseFollowing, request=request, key_prefix=pk
             )
         serializer = FriendshipSerializerForFollowings(

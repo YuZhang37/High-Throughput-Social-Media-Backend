@@ -4,8 +4,10 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 
+from gatekeeper.gate_keeper import GateKeeper
+from gatekeeper.service_names import SWITCH_NEWSFEED_TO_HBASE
 from newsfeeds.api.serializers import NewsFeedSerializer
-from newsfeeds.models import NewsFeed
+from newsfeeds.models import NewsFeed, HBaseNewsfeed
 from newsfeeds.services import NewsFeedService
 from utils.paginations import EndlessPagination
 
@@ -22,15 +24,20 @@ class NewsFeedViewSet(viewsets.GenericViewSet):
     @method_decorator(ratelimit(key='user', rate='5/s', method='GET', block=True))
     def list(self, request: Request):
         user = request.user
-        queryset = NewsFeed.objects.filter(user_id=user.id).order_by('-created_at')
-        newsfeed_list = NewsFeedService.get_cached_newsfeed_list(
-            user.id, queryset=queryset
-        )
+        newsfeed_list = NewsFeedService.get_cached_newsfeed_list(user.id)
         page = self.paginator.paginate_cached_list_with_limited_size(
             newsfeed_list, request
         )
         if not page:
-            page = self.paginate_queryset(queryset)
+            if GateKeeper.is_switch_on(SWITCH_NEWSFEED_TO_HBASE):
+                page = self.paginator.paginate_hbase(
+                    hbase_model=HBaseNewsfeed,
+                    request=request,
+                    key_prefix=request.user.id
+                )
+            else:
+                queryset = NewsFeed.objects.filter(user=request.user)
+                page = self.paginate_queryset(queryset)
         serializer = NewsFeedSerializer(
             page,
             many=True,
