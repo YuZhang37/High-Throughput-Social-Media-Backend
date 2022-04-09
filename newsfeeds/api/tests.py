@@ -1,11 +1,7 @@
 from django.conf import settings
-
-from newsfeeds.models import NewsFeed
 from rest_framework.test import APIClient
-
 from newsfeeds.services import NewsFeedService
 from testing.testcases import TestCase
-from utils.paginations import EndlessPagination
 
 NEWSFEEDS_URL = '/api/newsfeeds/'
 POST_TWEETS_URL = '/api/tweets/'
@@ -53,12 +49,13 @@ class NewsFeedApiTests(TestCase):
             'content': 'Hello Twitter',
         })
         posted_tweet_id = response.data['id']
+        # self.clear_cache()
         response = self.user1_client.get(NEWSFEEDS_URL)
         self.assertEqual(len(response.data['results']), 2)
         self.assertEqual(response.data['results'][0]['tweet']['id'], posted_tweet_id)
 
     def test_pagination(self):
-        page_size = EndlessPagination.page_size
+        page_size = settings.ENDLESS_PAGINATION_SIZE
         followed_user = self.create_user('followed')
         newsfeeds = []
         for i in range(page_size * 2):
@@ -72,11 +69,15 @@ class NewsFeedApiTests(TestCase):
         response = self.user1_client.get(NEWSFEEDS_URL)
         self.assertEqual(response.data['has_next_page'], True)
         self.assertEqual(len(response.data['results']), page_size)
-        self.assertEqual(response.data['results'][0]['id'], newsfeeds[0].id)
-        self.assertEqual(response.data['results'][1]['id'], newsfeeds[1].id)
         self.assertEqual(
-            response.data['results'][page_size - 1]['id'],
-            newsfeeds[page_size - 1].id,
+            response.data['results'][0]['created_at'], newsfeeds[0].created_at
+        )
+        self.assertEqual(
+            response.data['results'][1]['created_at'], newsfeeds[1].created_at
+        )
+        self.assertEqual(
+            response.data['results'][page_size - 1]['created_at'],
+            newsfeeds[page_size - 1].created_at,
         )
 
         # pull the second page
@@ -87,11 +88,11 @@ class NewsFeedApiTests(TestCase):
         self.assertEqual(response.data['has_next_page'], False)
         results = response.data['results']
         self.assertEqual(len(results), page_size)
-        self.assertEqual(results[0]['id'], newsfeeds[page_size].id)
-        self.assertEqual(results[1]['id'], newsfeeds[page_size + 1].id)
+        self.assertEqual(results[0]['created_at'], newsfeeds[page_size].created_at)
+        self.assertEqual(results[1]['created_at'], newsfeeds[page_size + 1].created_at)
         self.assertEqual(
-            results[page_size - 1]['id'],
-            newsfeeds[2 * page_size - 1].id,
+            results[page_size - 1]['created_at'],
+            newsfeeds[2 * page_size - 1].created_at,
         )
 
         # pull latest newsfeeds
@@ -111,7 +112,7 @@ class NewsFeedApiTests(TestCase):
         )
         self.assertEqual(response.data['has_next_page'], False)
         self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['id'], new_newsfeed.id)
+        self.assertEqual(response.data['results'][0]['created_at'], new_newsfeed.created_at)
 
     def test_user_cache(self):
         profile = self.user2.profile
@@ -185,13 +186,13 @@ class NewsFeedApiTests(TestCase):
         # only cached list_limit objects
         cached_newsfeeds = NewsFeedService.get_cached_newsfeed_list(self.user1.id)
         self.assertEqual(len(cached_newsfeeds), list_limit)
-        queryset = NewsFeed.objects.filter(user=self.user1)
-        self.assertEqual(queryset.count(), list_limit + page_size)
+        count = NewsFeedService.get_newsfeed_count(self.user1.id)
+        self.assertEqual(count, list_limit + page_size)
 
         results = self._paginate_to_get_newsfeeds(self.user1_client)
         self.assertEqual(len(results), list_limit + page_size)
         for i in range(list_limit + page_size):
-            self.assertEqual(newsfeeds[i].id, results[i]['id'])
+            self.assertEqual(newsfeeds[i].created_at, results[i]['created_at'])
 
         # a followed user create a new tweet
         self.create_friendship(self.user1, self.user2)
@@ -203,7 +204,7 @@ class NewsFeedApiTests(TestCase):
             self.assertEqual(len(results), list_limit + page_size + 1)
             self.assertEqual(results[0]['tweet']['id'], new_tweet.id)
             for i in range(list_limit + page_size):
-                self.assertEqual(newsfeeds[i].id, results[i + 1]['id'])
+                self.assertEqual(newsfeeds[i].created_at, results[i + 1]['created_at'])
 
         _test_newsfeeds_after_new_feed_pushed()
 

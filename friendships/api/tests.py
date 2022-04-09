@@ -1,9 +1,8 @@
-
+from django.conf import settings
 from rest_framework.test import APIClient
 
 from friendships.services import FriendshipService
 from testing.testcases import TestCase
-from utils.paginations import EndlessPaginationForFriendship
 
 FOLLOW_URL = '/api/friendships/{}/follow/'
 UNFOLLOW_URL = '/api/friendships/{}/unfollow/'
@@ -136,7 +135,7 @@ class FriendshipApiTests(TestCase):
         )
 
     def test_followers_pagination(self):
-        page_size = EndlessPaginationForFriendship.page_size
+        page_size = settings.ENDLESS_PAGINATION_SIZE
         friendships = []
         for i in range(page_size * 2):
             follower = self.create_user('user1_follower{}'.format(i))
@@ -176,7 +175,7 @@ class FriendshipApiTests(TestCase):
             self.assertEqual(result['created_at'], friendship.created_at)
 
     def test_followings_pagination(self):
-        page_size = EndlessPaginationForFriendship.page_size
+        page_size = settings.ENDLESS_PAGINATION_SIZE
         friendships = []
         for i in range(page_size * 2):
             following = self.create_user('user1_following{}'.format(i))

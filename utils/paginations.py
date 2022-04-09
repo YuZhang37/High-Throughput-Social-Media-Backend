@@ -23,7 +23,10 @@ class EndlessPagination(BasePagination):
         index = 0
         if 'created_at__gt' in request.query_params:
             created_at__gt = request.query_params['created_at__gt']
-            timestamp = parser.isoparse(created_at__gt)
+            try:
+                timestamp = parser.isoparse(created_at__gt)
+            except ValueError:
+                timestamp = int(created_at__gt)
             for index, tweet in enumerate(cached_list):
                 if tweet.created_at <= timestamp:
                     break
@@ -31,7 +34,10 @@ class EndlessPagination(BasePagination):
 
         if 'created_at__lt' in request.query_params:
             created_at__lt = request.query_params['created_at__lt']
-            timestamp = parser.parse(created_at__lt)
+            try:
+                timestamp = parser.isoparse(created_at__lt)
+            except ValueError:
+                timestamp = int(created_at__lt)
             for index, tweet in enumerate(cached_list):
                 if tweet.created_at < timestamp:
                     break
@@ -73,10 +79,11 @@ class EndlessPagination(BasePagination):
             'results': data,
         }, status=status.HTTP_200_OK)
 
-
-class EndlessPaginationForFriendship(EndlessPagination):
-
-    def paginate_hbase_for_friendship(self, hbase_model, request, key_prefix):
+    def paginate_hbase(self, hbase_model, request, key_prefix):
+        """
+        paginate hbase with hbase_model which has a row key with only two fields
+        (XX, created_at). key_prefix specifies XX
+        """
         self.has_next_page = False
         if 'created_at__gt' in request.query_params:
             created_at__gt = int(request.query_params['created_at__gt'])

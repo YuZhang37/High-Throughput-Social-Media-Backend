@@ -54,6 +54,10 @@ class Tweet(models.Model):
         )
         return user
 
+    @property
+    def timestamp(self):
+        return int(self.created_at.timestamp() * 1000000)
+
 
 pre_delete.connect(receiver=invalidate_cached_object, sender=Tweet)
 post_save.connect(receiver=invalidate_cached_object, sender=Tweet)

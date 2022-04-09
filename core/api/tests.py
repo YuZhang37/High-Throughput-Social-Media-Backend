@@ -105,7 +105,6 @@ class AccountApiTests(TestCase):
             'email': 'someone@mytwitter.com',
             'password': '123',
         })
-        # print(response.data)
         self.assertEqual(response.status_code, 400)
 
         # 测试用户名太长
@@ -114,7 +113,6 @@ class AccountApiTests(TestCase):
             'email': 'someone@mytwitter.com',
             'password': 'any password',
         })
-        # print(response.data)
         self.assertEqual(response.status_code, 400)
 
         # 成功注册

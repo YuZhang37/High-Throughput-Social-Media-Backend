@@ -47,13 +47,12 @@ class TweetTests(TestCase):
                 content_type='image/jpeg',
             ),
         )
-        # print("user:", photo.user)
+
         self.assertEqual(photo.user, self.user1)
         self.assertEqual(photo.status, TweetPhotoStatus.PENDING)
         # self.assertEqual(photo.file, "")
         self.assertNotEqual(photo.file, "")
         self.assertEqual(self.tweet.tweetphoto_set.count(), 1)
-        # print("photo:", photo)
 
     def test_cache_tweet_in_redis(self):
         tweet = self.create_tweet(self.user1)

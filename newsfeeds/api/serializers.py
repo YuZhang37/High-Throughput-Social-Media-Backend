@@ -1,15 +1,20 @@
 from rest_framework import serializers
-
-from newsfeeds.models import NewsFeed
 from tweets.api.serializers import TweetSerializer
 
 
-# https://stackoverflow.com/questions/37722415/
-# django-rest-framework-access-context-from-nested-serializer
-# not found any official reference on how nested serializer works
-class NewsFeedSerializer(serializers.ModelSerializer):
-    tweet = TweetSerializer(source='cached_tweet')
+class NewsFeedSerializer(serializers.Serializer):
+    def update(self, instance, validated_data):
+        pass
 
-    class Meta:
-        model = NewsFeed
-        fields = ('id', 'user', 'tweet', 'created_at')
+    def create(self, validated_data):
+        pass
+
+    tweet = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+
+    def get_tweet(self, obj):
+        serializer = TweetSerializer(obj.cached_tweet, context=self.context)
+        return serializer.data
+
+    def get_created_at(self, obj):
+        return obj.created_at

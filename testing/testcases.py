@@ -3,15 +3,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.test import TestCase as DjangoTestCase
 from rest_framework.test import APIClient
-
 from comments.models import Comment
 from django_hbase.models import HBaseModel
-from friendships.models import Friendship
 from friendships.services import FriendshipService
 from gatekeeper.gate_keeper import GateKeeper
-from gatekeeper.service_names import SWITCH_FRIENDSHIP_TO_HBASE
+from gatekeeper.service_names import SWITCH_FRIENDSHIP_TO_HBASE, SWITCH_NEWSFEED_TO_HBASE
 from likes.models import Like
-from newsfeeds.models import NewsFeed
+from newsfeeds.services import NewsFeedService
 from tweets.models import Tweet
 from utils.redisUtils.redis_client import RedisClient
 
@@ -21,7 +19,6 @@ class TestCase(DjangoTestCase):
 
     def setUp(self):
         self.clear_cache()
-        GateKeeper.set_kv(SWITCH_FRIENDSHIP_TO_HBASE, 'percentage', 100)
         try:
             self.hbase_tables_created = True
             for model_class in HBaseModel.__subclasses__():
@@ -40,6 +37,8 @@ class TestCase(DjangoTestCase):
     def clear_cache(self):
         caches['testing'].clear()
         RedisClient.clear_db()
+        GateKeeper.turn_on(SWITCH_FRIENDSHIP_TO_HBASE)
+        GateKeeper.turn_on(SWITCH_NEWSFEED_TO_HBASE)
 
     @property
     def anonymous_client(self):
@@ -85,7 +84,10 @@ class TestCase(DjangoTestCase):
         return user, client
 
     def create_newsfeed(self, user, tweet):
-        return NewsFeed.objects.create(user=user, tweet=tweet)
+        newsfeed = NewsFeedService.create_newsfeed(
+            user_id=user.id, tweet_id=tweet.id, created_at=tweet.timestamp
+        )
+        return newsfeed
 
     def create_friendship(self, from_user, to_user):
         return FriendshipService.follow(

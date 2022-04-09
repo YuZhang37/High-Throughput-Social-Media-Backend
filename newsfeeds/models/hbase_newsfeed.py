@@ -3,7 +3,7 @@ from tweets.models import Tweet
 from utils.memcached_services import MemcachedService
 
 
-class HBaseNewsfeed(models.HBaseModel):
+class HBaseNewsFeed(models.HBaseModel):
     user_id = models.IntegerField(reverse=True)
     tweet_id = models.IntegerField(column_family='cf')
     created_at = models.TimestampField()
@@ -16,6 +16,6 @@ class HBaseNewsfeed(models.HBaseModel):
         return '{} inbox of {}: {}'.format(self.created_at, self.user_id, self.tweet_id)
 
     @property
-    def cache_tweet(self):
+    def cached_tweet(self):
         tweet = MemcachedService.get_object_from_cache(Tweet, self.tweet_id)
         return tweet
