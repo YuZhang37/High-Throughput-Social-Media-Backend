@@ -7,14 +7,16 @@ from utils.redisUtils.redis_serializers import RedisModelSerializer
 class RedisService:
 
     @classmethod
-    def _load_objects(cls, key, get_objects, serializer=RedisModelSerializer):
+    def _load_objects(cls, key, lazy_get_objects, serializer=RedisModelSerializer):
         serialized_objects = []
         limited_queryset = list(
-            get_objects(settings.REDIS_CACHED_LIST_LIMIT_LENGTH)
+            lazy_get_objects(settings.REDIS_CACHED_LIST_LIMIT_LENGTH)
         )
+
         for obj in limited_queryset:
             serialized_obj = serializer.serialize(obj)
             serialized_objects.append(serialized_obj)
+
         if serialized_objects:
             conn = RedisClient.get_connection()
             conn.rpush(key, *serialized_objects)
@@ -22,10 +24,10 @@ class RedisService:
         return limited_queryset
 
     @classmethod
-    def get_objects(cls, key, get_objects, serializer=RedisModelSerializer):
+    def get_objects(cls, key, lazy_get_objects, serializer=RedisModelSerializer):
         conn = RedisClient.get_connection()
         if not conn.exists(key):
-            deserialized_objects = cls._load_objects(key, get_objects, serializer)
+            deserialized_objects = cls._load_objects(key, lazy_get_objects, serializer)
             return deserialized_objects
         objects = conn.lrange(key, 0, -1)
         deserialized_objects = []
@@ -35,11 +37,11 @@ class RedisService:
         return deserialized_objects
 
     @classmethod
-    def push_object(cls, key, obj, get_objects, serializer=RedisModelSerializer):
+    def push_object(cls, key, obj, lazy_get_objects, serializer=RedisModelSerializer):
         conn = RedisClient.get_connection()
         serialized_obj = serializer.serialize(obj)
         if not conn.exists(key):
-            cls._load_objects(key, get_objects)
+            cls._load_objects(key, lazy_get_objects, serializer)
             return
         conn.lpush(key, serialized_obj)
         conn.ltrim(key, 0, settings.REDIS_CACHED_LIST_LIMIT_LENGTH - 1)

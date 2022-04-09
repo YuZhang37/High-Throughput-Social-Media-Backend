@@ -10,7 +10,6 @@ class FriendshipServiceTests(TestCase):
 
     def setUp(self):
         super(FriendshipServiceTests, self).setUp()
-        self.clear_cache()
         self.user1 = self.create_user('user1')
         self.user2 = self.create_user('user2')
 

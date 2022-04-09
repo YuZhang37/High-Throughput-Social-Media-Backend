@@ -1,8 +1,5 @@
 from django.conf import settings
-
-from newsfeeds.models import NewsFeed
 from rest_framework.test import APIClient
-
 from newsfeeds.services import NewsFeedService
 from testing.testcases import TestCase
 
@@ -52,6 +49,7 @@ class NewsFeedApiTests(TestCase):
             'content': 'Hello Twitter',
         })
         posted_tweet_id = response.data['id']
+        # self.clear_cache()
         response = self.user1_client.get(NEWSFEEDS_URL)
         self.assertEqual(len(response.data['results']), 2)
         self.assertEqual(response.data['results'][0]['tweet']['id'], posted_tweet_id)
@@ -188,8 +186,8 @@ class NewsFeedApiTests(TestCase):
         # only cached list_limit objects
         cached_newsfeeds = NewsFeedService.get_cached_newsfeed_list(self.user1.id)
         self.assertEqual(len(cached_newsfeeds), list_limit)
-        queryset = NewsFeed.objects.filter(user=self.user1)
-        self.assertEqual(queryset.count(), list_limit + page_size)
+        count = NewsFeedService.get_newsfeed_count(self.user1.id)
+        self.assertEqual(count, list_limit + page_size)
 
         results = self._paginate_to_get_newsfeeds(self.user1_client)
         self.assertEqual(len(results), list_limit + page_size)

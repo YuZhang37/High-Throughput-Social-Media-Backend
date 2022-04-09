@@ -17,10 +17,11 @@ class FriendshipService:
 
     @classmethod
     def get_followings_id_set(cls, from_user_id):
-        key = FOLLOWING_PATTERN.format(user_id=from_user_id)
-        value = cache.get(key)
-        if value is not None:
-            return value
+        # TODO use redis to cache followings_id
+        # key = FOLLOWING_PATTERN.format(user_id=from_user_id)
+        # value = cache.get(key)
+        # if value is not None:
+        #     return value
         if not GateKeeper.is_switch_on(SWITCH_FRIENDSHIP_TO_HBASE):
             friendships = Friendship.objects.filter(from_user=from_user_id)
         else:
@@ -31,7 +32,7 @@ class FriendshipService:
             # don't use friendship.to_user.id, N + 1 queries
             friendship.to_user_id for friendship in friendships
         ])
-        cache.set(key, followings_id_set)
+        # cache.set(key, followings_id_set)
         return followings_id_set
 
     @classmethod
@@ -93,6 +94,7 @@ class FriendshipService:
         HBaseFollower.delete(
             to_user_id=to_user_id, created_at=instance.created_at
         )
+
         return 1
 
     @classmethod

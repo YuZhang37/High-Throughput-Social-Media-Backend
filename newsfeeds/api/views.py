@@ -7,7 +7,7 @@ from rest_framework.request import Request
 from gatekeeper.gate_keeper import GateKeeper
 from gatekeeper.service_names import SWITCH_NEWSFEED_TO_HBASE
 from newsfeeds.api.serializers import NewsFeedSerializer
-from newsfeeds.models import NewsFeed, HBaseNewsfeed
+from newsfeeds.models import NewsFeed, HBaseNewsFeed
 from newsfeeds.services import NewsFeedService
 from utils.paginations import EndlessPagination
 
@@ -31,7 +31,7 @@ class NewsFeedViewSet(viewsets.GenericViewSet):
         if not page:
             if GateKeeper.is_switch_on(SWITCH_NEWSFEED_TO_HBASE):
                 page = self.paginator.paginate_hbase(
-                    hbase_model=HBaseNewsfeed,
+                    hbase_model=HBaseNewsFeed,
                     request=request,
                     key_prefix=request.user.id
                 )

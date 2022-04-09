@@ -35,7 +35,7 @@ class EndlessPagination(BasePagination):
         if 'created_at__lt' in request.query_params:
             created_at__lt = request.query_params['created_at__lt']
             try:
-                timestamp = parser.parse(created_at__lt)
+                timestamp = parser.isoparse(created_at__lt)
             except ValueError:
                 timestamp = int(created_at__lt)
             for index, tweet in enumerate(cached_list):

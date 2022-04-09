@@ -1,6 +1,5 @@
 from tweets.models import TweetPhoto, Tweet
 from twitter.cache import USER_TWEET_LIST_PATTERN
-from utils.redisUtils.redis_serializers import RedisModelSerializer
 from utils.redisUtils.redis_services import RedisService
 
 
@@ -31,11 +30,11 @@ class TweetService:
         return _lazy_tweets
 
     @classmethod
-    def get_cached_tweets(cls, user_id, queryset=None):
+    def get_cached_tweets(cls, user_id):
         get_tweets = cls._lazy_load_tweets(user_id=user_id)
         key = USER_TWEET_LIST_PATTERN.format(user_id=user_id)
         tweets = RedisService.get_objects(
-            key=key, get_objects=get_tweets
+            key=key, lazy_get_objects=get_tweets
         )
         return tweets
 
@@ -44,5 +43,5 @@ class TweetService:
         key = USER_TWEET_LIST_PATTERN.format(user_id=tweet.user_id)
         get_tweets = cls._lazy_load_tweets(user_id=tweet.user_id)
         RedisService.push_object(
-            key=key, obj=tweet, get_objects=get_tweets,
+            key=key, obj=tweet, lazy_get_objects=get_tweets,
         )

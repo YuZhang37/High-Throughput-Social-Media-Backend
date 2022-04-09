@@ -1,6 +1,8 @@
+from django.conf import settings
+
 from gatekeeper.gate_keeper import GateKeeper
 from gatekeeper.service_names import SWITCH_NEWSFEED_TO_HBASE
-from newsfeeds.models import NewsFeed, HBaseNewsfeed
+from newsfeeds.models import NewsFeed, HBaseNewsFeed
 from twitter.cache import USER_NEWSFEED_LIST_PATTERN
 from utils.redisUtils.redis_serializers import RedisHBaseSerializer, RedisModelSerializer
 from utils.redisUtils.redis_services import RedisService
@@ -12,7 +14,7 @@ class NewsFeedService:
     def _lazy_load_newsfeeds(cls, user_id):
         def _lazy_newsfeeds(size):
             if GateKeeper.is_switch_on(SWITCH_NEWSFEED_TO_HBASE):
-                newsfeeds = HBaseNewsfeed.filter(
+                newsfeeds = HBaseNewsFeed.filter(
                     prefix={'user_id': user_id}, limit=size, reverse=True
                 )
                 return newsfeeds
@@ -34,26 +36,27 @@ class NewsFeedService:
     def fan_out_to_followers(cls, tweet):
         from newsfeeds.tasks import fanout_newsfeeds_main_task
         fanout_newsfeeds_main_task.delay(
-            tweet_id=tweet.id, user_id=tweet.user_id, created_at=tweet.created_at
+            tweet_id=tweet.id, user_id=tweet.user_id, created_at=tweet.timestamp
         )
 
     @classmethod
     def get_cached_newsfeed_list(cls, user_id):
         key = USER_NEWSFEED_LIST_PATTERN.format(user_id=user_id)
-        get_newsfeeds = cls._lazy_load_newsfeeds(user_id=user_id)
+        lazy_get_newsfeeds = cls._lazy_load_newsfeeds(user_id=user_id)
         serializer = cls.get_serializer(SWITCH_NEWSFEED_TO_HBASE)
+        result = lazy_get_newsfeeds(size=settings.REDIS_CACHED_LIST_LIMIT_LENGTH)
         newsfeed_list = RedisService.get_objects(
-            key=key, get_objects=get_newsfeeds, serializer=serializer
+            key=key, lazy_get_objects=lazy_get_newsfeeds, serializer=serializer
         )
         return newsfeed_list
 
     @classmethod
     def push_newsfeed_to_cache(cls, obj: NewsFeed):
-        get_objects = cls._lazy_load_newsfeeds(user_id=obj.user_id)
+        lazy_get_objects = cls._lazy_load_newsfeeds(user_id=obj.user_id)
         key = USER_NEWSFEED_LIST_PATTERN.format(user_id=obj.user_id)
         serializer = cls.get_serializer(SWITCH_NEWSFEED_TO_HBASE)
         RedisService.push_object(
-            key=key, obj=obj, get_objects=get_objects, serializer=serializer
+            key=key, obj=obj, lazy_get_objects=lazy_get_objects, serializer=serializer
         )
 
     @classmethod
@@ -61,15 +64,16 @@ class NewsFeedService:
         if not GateKeeper.is_switch_on(SWITCH_NEWSFEED_TO_HBASE):
             newsfeed = NewsFeed.objects.create(user_id=user_id, tweet_id=tweet_id)
         else:
-            newsfeed = HBaseNewsfeed.create(
+            newsfeed = HBaseNewsFeed.create(
                 user_id=user_id, tweet_id=tweet_id, created_at=created_at
             )
+            cls.push_newsfeed_to_cache(newsfeed)
         return newsfeed
 
     @classmethod
     def get_model_class(cls):
         if GateKeeper.is_switch_on(SWITCH_NEWSFEED_TO_HBASE):
-            return HBaseNewsfeed
+            return HBaseNewsFeed
         return NewsFeed
 
     @classmethod
@@ -77,4 +81,28 @@ class NewsFeedService:
         if not GateKeeper.is_switch_on(SWITCH_NEWSFEED_TO_HBASE):
             NewsFeed.objects.bulk_create(newsfeeds)
         else:
-            HBaseNewsfeed.batch_create(newsfeeds)
+            HBaseNewsFeed.batch_create(newsfeeds)
+        for newsfeed in newsfeeds:
+            NewsFeedService.push_newsfeed_to_cache(newsfeed)
+
+    @classmethod
+    def get_newsfeed(cls, user_id=None):
+        if GateKeeper.is_switch_on(SWITCH_NEWSFEED_TO_HBASE):
+            if user_id:
+                newsfeeds = HBaseNewsFeed.filter(
+                    prefix={'user_id': user_id}, reverse=True
+                )
+            else:
+                newsfeeds = HBaseNewsFeed.filter(reverse=True)
+        else:
+            if user_id:
+                newsfeeds = NewsFeed.objects.filter(user_id=user_id)\
+                    .order_by('-created_at')
+            else:
+                newsfeeds = NewsFeed.objects.all().order_by('-created_at')
+        return newsfeeds
+
+    @classmethod
+    def get_newsfeed_count(cls, user_id=None):
+        newsfeeds = cls.get_newsfeed(user_id=user_id)
+        return len(newsfeeds)
