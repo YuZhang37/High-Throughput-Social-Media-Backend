@@ -1,9 +1,22 @@
 import json
 
+from django.conf import settings
 from django.core import serializers
 
 from django_hbase.models import HBaseModel
+from utils.redisUtils.constants import REDIS_ENCODING
 from utils.redisUtils.json_encoder import JSONEncoder
+
+
+class RedisSerializerService:
+
+    @classmethod
+    def get_serializer(cls, gk_class, gk_name):
+        if gk_class.is_switch_on(gk_name):
+            serializer = RedisHBaseSerializer
+        else:
+            serializer = RedisModelSerializer
+        return serializer
 
 
 class RedisModelSerializer:
@@ -45,3 +58,14 @@ class RedisHBaseSerializer:
         obj = hbase_model(**data)
         return obj
 
+
+class IntegerSerializer:
+
+    @classmethod
+    def serialize(cls, num):
+        return str(num).encode(encoding=REDIS_ENCODING)
+
+    @classmethod
+    def deserialize(cls, num_bytes):
+        num = int(num_bytes.decode(encoding=REDIS_ENCODING))
+        return num

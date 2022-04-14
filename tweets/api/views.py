@@ -6,7 +6,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-
 from newsfeeds.services import NewsFeedService
 from tweets.api.serializers import (
     TweetSerializerForCreate,
