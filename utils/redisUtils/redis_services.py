@@ -131,18 +131,9 @@ class RedisService:
             return deserialized_objects
         elements = conn.smembers(key)
         elements.remove("".encode(encoding=REDIS_ENCODING))
-        deserialized_objects = []
+        deserialized_objects = set()
         for obj in elements:
             deserialized_object = serializer.deserialize(obj)
-            deserialized_objects.append(deserialized_object)
+            deserialized_objects.add(deserialized_object)
         return deserialized_objects
-
-
-
-
-
-
-
-
-
 

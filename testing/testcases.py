@@ -9,6 +9,7 @@ from friendships.services import FriendshipService
 from gatekeeper.gate_keeper import GateKeeper
 from gatekeeper.service_names import SWITCH_FRIENDSHIP_TO_HBASE, SWITCH_NEWSFEED_TO_HBASE
 from likes.models import Like
+from likes.services import LikeService
 from newsfeeds.services import NewsFeedService
 from tweets.models import Tweet
 from utils.redisUtils.redis_client import RedisClient
