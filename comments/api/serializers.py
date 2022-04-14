@@ -58,13 +58,21 @@ class CommentSerializer(serializers.ModelSerializer):
             'likes_count',
         ]
 
+    def _get_liked_comment_id_set(self):
+        if self.context['request'].user.is_anonymous:
+            return {}
+        if hasattr(self, '_cached_liked_comments_id_set'):
+            return self._cached_liked_comments_id_set
+        liked_comments_id_set = LikeService.get_liked_objects_id_set(
+            user_id=self.context['request'].user.id, model_class=Comment
+        )
+        setattr(self, '_cached_liked_comments_id_set', liked_comments_id_set)
+        return liked_comments_id_set
+
     def get_likes_count(self, obj):
         count = RedisService.get_count(obj, 'likes_count')
         return count
 
     def get_has_liked(self, obj):
-        has_liked = LikeService.has_liked(
-            user=self.context['request'].user,
-            obj=obj,
-        )
-        return has_liked
+        liked_comments_id_set = self._get_liked_comment_id_set()
+        return obj.id in liked_comments_id_set

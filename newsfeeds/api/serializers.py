@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from likes.services import LikeService
 from tweets.api.serializers import TweetSerializer
+from tweets.models import Tweet
 
 
 class NewsFeedSerializer(serializers.Serializer):
@@ -18,8 +19,9 @@ class NewsFeedSerializer(serializers.Serializer):
         if self.context['request'].user.is_anonymous:
             return {}
         if not hasattr(self, '_cached_liked_tweet_id_set'):
-            liked_tweet_id_set = LikeService.get_liked_tweets_id_set(
-                user_id=self.context['request'].user.id
+            liked_tweet_id_set = LikeService.get_liked_objects_id_set(
+                user_id=self.context['request'].user.id,
+                model_class=Tweet
             )
             setattr(self, '_cached_liked_tweet_id_set', liked_tweet_id_set)
         return getattr(self, '_cached_liked_tweet_id_set')

@@ -69,8 +69,8 @@ class TweetSerializer(serializers.ModelSerializer):
             return {}
         if hasattr(self, '_cached_liked_tweet_id_set'):
             return self._cached_liked_tweet_id_set
-        liked_tweet_id_set = LikeService.get_liked_tweets_id_set(
-            user_id=self.context['request'].user.id
+        liked_tweet_id_set = LikeService.get_liked_objects_id_set(
+            user_id=self.context['request'].user.id, model_class=Tweet
         )
         setattr(self, '_cached_liked_tweet_id_set', liked_tweet_id_set)
         return liked_tweet_id_set

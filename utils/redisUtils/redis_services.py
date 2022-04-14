@@ -136,4 +136,4 @@ class RedisService:
             deserialized_object = serializer.deserialize(obj)
             deserialized_objects.add(deserialized_object)
         return deserialized_objects
-    
+

@@ -5,7 +5,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import pre_delete, post_save
 
-from likes.signals import decr_likes_count, incr_likes_count
+from likes.signals import decr_likes_count, incr_likes_count, remove_liked_object_id_from_set, \
+    add_liked_object_id_to_set
 from utils.memcached_services import MemcachedService
 
 
@@ -48,4 +49,7 @@ class Like(models.Model):
 
 
 pre_delete.connect(receiver=decr_likes_count, sender=Like)
+pre_delete.connect(receiver=remove_liked_object_id_from_set, sender=Like)
 post_save.connect(receiver=incr_likes_count, sender=Like)
+post_save.connect(receiver=add_liked_object_id_to_set, sender=Like)
+
