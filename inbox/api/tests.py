@@ -173,7 +173,7 @@ class NotificationApiTests(TestCase):
         self.assertEqual(response.data['unread_count'], 1)
 
         # 再标记为未读
-        response = self.user1_client.put(url, {'unread': True})
+        self.user1_client.put(url, {'unread': True})
         response = self.user1_client.get(unread_url)
         self.assertEqual(response.data['unread_count'], 2)
         # 必须带 unread

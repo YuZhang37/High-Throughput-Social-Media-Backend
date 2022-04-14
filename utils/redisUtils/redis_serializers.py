@@ -1,6 +1,5 @@
 import json
 
-from django.conf import settings
 from django.core import serializers
 
 from django_hbase.models import HBaseModel

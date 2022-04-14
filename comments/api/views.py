@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from ratelimit.decorators import ratelimit
 from rest_framework import viewsets, status
