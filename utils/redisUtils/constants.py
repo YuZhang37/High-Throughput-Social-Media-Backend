@@ -1,0 +1,1 @@
+REDIS_ENCODING = 'utf-8'

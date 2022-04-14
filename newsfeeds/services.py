@@ -1,10 +1,8 @@
-from django.conf import settings
-
 from gatekeeper.gate_keeper import GateKeeper
 from gatekeeper.service_names import SWITCH_NEWSFEED_TO_HBASE
 from newsfeeds.models import NewsFeed, HBaseNewsFeed
 from twitter.cache import USER_NEWSFEED_LIST_PATTERN
-from utils.redisUtils.redis_serializers import RedisHBaseSerializer, RedisModelSerializer
+from utils.redisUtils.redis_serializers import RedisSerializerService
 from utils.redisUtils.redis_services import RedisService
 
 
@@ -25,14 +23,6 @@ class NewsFeedService:
         return _lazy_newsfeeds
 
     @classmethod
-    def get_serializer(cls, gk_name):
-        if GateKeeper.is_switch_on(gk_name):
-            serializer = RedisHBaseSerializer
-        else:
-            serializer = RedisModelSerializer
-        return serializer
-
-    @classmethod
     def fan_out_to_followers(cls, tweet):
         from newsfeeds.tasks import fanout_newsfeeds_main_task
         fanout_newsfeeds_main_task.delay(
@@ -43,8 +33,9 @@ class NewsFeedService:
     def get_cached_newsfeed_list(cls, user_id):
         key = USER_NEWSFEED_LIST_PATTERN.format(user_id=user_id)
         lazy_get_newsfeeds = cls._lazy_load_newsfeeds(user_id=user_id)
-        serializer = cls.get_serializer(SWITCH_NEWSFEED_TO_HBASE)
-        result = lazy_get_newsfeeds(size=settings.REDIS_CACHED_LIST_LIMIT_LENGTH)
+        serializer = RedisSerializerService.get_serializer(
+            gk_class=GateKeeper, gk_name=SWITCH_NEWSFEED_TO_HBASE
+        )
         newsfeed_list = RedisService.get_objects(
             key=key, lazy_get_objects=lazy_get_newsfeeds, serializer=serializer
         )
@@ -54,7 +45,9 @@ class NewsFeedService:
     def push_newsfeed_to_cache(cls, obj: NewsFeed):
         lazy_get_objects = cls._lazy_load_newsfeeds(user_id=obj.user_id)
         key = USER_NEWSFEED_LIST_PATTERN.format(user_id=obj.user_id)
-        serializer = cls.get_serializer(SWITCH_NEWSFEED_TO_HBASE)
+        serializer = RedisSerializerService.get_serializer(
+            gk_class=GateKeeper, gk_name=SWITCH_NEWSFEED_TO_HBASE
+        )
         RedisService.push_object(
             key=key, obj=obj, lazy_get_objects=lazy_get_objects, serializer=serializer
         )

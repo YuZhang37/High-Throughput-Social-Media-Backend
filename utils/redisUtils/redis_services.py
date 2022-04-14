@@ -1,5 +1,6 @@
 from django.conf import settings
 
+from utils.redisUtils.constants import REDIS_ENCODING
 from utils.redisUtils.redis_client import RedisClient
 from utils.redisUtils.redis_serializers import RedisModelSerializer
 
@@ -90,6 +91,51 @@ class RedisService:
         conn.set(key, count, ex=settings.REDIS_KEY_EXPIRE_TIME)
         return count
 
+    @classmethod
+    def _load_set(cls, key, lazy_get_objects, serializer=RedisModelSerializer):
+        conn = RedisClient.get_connection()
+        elements = list(lazy_get_objects())
+        serialized_objects = []
+        for obj in elements:
+            serialized_obj = serializer.serialize(obj)
+            serialized_objects.append(serialized_obj)
+
+        serialized_objects.append("")
+        conn.sadd(key, *serialized_objects)
+        conn.expire(key, settings.REDIS_KEY_EXPIRE_TIME)
+        return elements
+
+    @classmethod
+    def add_to_set(cls, key, value, lazy_get_objects, serializer):
+        conn = RedisClient.get_connection()
+        if not conn.exists(key):
+            cls._load_set(key, lazy_get_objects, serializer)
+            return
+        serialized_obj = serializer.serialize(value)
+        conn.sadd(key, serialized_obj)
+
+    @classmethod
+    def remove_from_set(cls, key, value, lazy_get_objects, serializer):
+        conn = RedisClient.get_connection()
+        if not conn.exists(key):
+            cls._load_set(key, lazy_get_objects, serializer)
+            return
+        serialized_obj = serializer.serialize(value)
+        conn.srem(key, serialized_obj)
+
+    @classmethod
+    def get_from_set(cls, key, lazy_get_objects, serializer):
+        conn = RedisClient.get_connection()
+        if not conn.exists(key):
+            deserialized_objects = cls._load_set(key, lazy_get_objects, serializer)
+            return deserialized_objects
+        elements = conn.smembers(key)
+        elements.remove("".encode(encoding=REDIS_ENCODING))
+        deserialized_objects = []
+        for obj in elements:
+            deserialized_object = serializer.deserialize(obj)
+            deserialized_objects.append(deserialized_object)
+        return deserialized_objects
 
 
 
