@@ -1,11 +1,9 @@
 from django.utils.decorators import method_decorator
-from notifications.models import Notification
 from ratelimit.decorators import ratelimit
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.request import Request
 from rest_framework.response import Response
 
 from inbox.api.serializers import (

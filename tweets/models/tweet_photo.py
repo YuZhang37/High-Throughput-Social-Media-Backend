@@ -31,4 +31,4 @@ class TweetPhoto(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user.id} - {self.tweet.id} - {self.file}'
+        return f'{self.user_id} - {self.tweet_id} - {self.file}'
