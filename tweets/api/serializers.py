@@ -64,12 +64,24 @@ class TweetSerializer(serializers.ModelSerializer):
             'photo_urls',
         ]
 
-    def get_has_liked(self, obj):
-        has_liked = LikeService.has_liked(
-            user=self.context['request'].user,
-            obj=obj,
+    def _get_liked_tweet_id_set(self):
+        if self.context['request'].user.is_anonymous:
+            return {}
+        if hasattr(self, '_cached_liked_tweet_id_set'):
+            return self._cached_liked_tweet_id_set
+        liked_tweet_id_set = LikeService.get_liked_tweets_id_set(
+            user_id=self.context['request'].user.id
         )
-        return has_liked
+        setattr(self, '_cached_liked_tweet_id_set', liked_tweet_id_set)
+        return liked_tweet_id_set
+
+    def get_has_liked(self, obj):
+        if hasattr(self.context, '_cached_liked_tweet_id_set_from_newsfeed'):
+            liked_tweet_id_set \
+                = self.context['_cached_liked_tweet_id_set_from_newsfeed']
+        else:
+            liked_tweet_id_set = self._get_liked_tweet_id_set()
+        return obj.id in liked_tweet_id_set
 
     def get_likes_count(self, obj: Tweet):
         count = RedisService.get_count(obj, 'likes_count')

@@ -36,12 +36,9 @@ class FriendshipService:
     def get_followings_id_set(cls, from_user_id):
         key = FOLLOWING_PATTERN.format(user_id=from_user_id)
         lazy_get_objects = cls._lazy_load_followings(from_user_id)
-        followings_id_in_bytes = RedisService.get_from_set(
+        followings_id = RedisService.get_from_set(
             key=key, lazy_get_objects=lazy_get_objects, serializer=IntegerSerializer
         )
-        followings_id = {
-            int(str(following_id)) for following_id in followings_id_in_bytes
-        }
         return followings_id
 
     @classmethod
