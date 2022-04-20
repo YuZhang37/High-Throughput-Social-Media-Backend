@@ -139,4 +139,6 @@ twitter/local_settings.py
 shared_system_files
 hbase-2.4.11
 tmp
+static
 _test_script.py
+*.pem

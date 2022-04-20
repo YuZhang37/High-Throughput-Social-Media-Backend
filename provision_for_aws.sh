@@ -16,9 +16,6 @@ sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.9 2
 # https://cloudbytes.dev/snippets/upgrade-python-to-latest-version-on-ubuntu-linux
 # sudo update-alternatives --config python3
 # https://linuxconfig.org/how-to-change-from-default-to-alternative-python-version-on-debian-linux
-# https://stackoverflow.com/questions/21530577/fatal-error-python-h-no-such-file-or-directory
-sudo apt-get install python3.9-dev
-# otherwise, mysqlclient is not installed successfully
 echo "python 3.9 was installed"
 
 echo "Install pip3"
@@ -80,32 +77,14 @@ sudo python -m pip install --no-input --upgrade --force-reinstall pip
 # sudo python -m pip uninstall pip
 echo "pip was installed"
 
-pip install django
-pip install --upgrade setuptools
-# pip install --upgrade setuptools is necessary for mysqlclient and pipenv
-pip install mysqlclient
-pip install djangorestframework
-pip install django-filter
-pip install django-notifications-hq
-pip install django-storages
-pip install boto3
-pip install pymemcache
-pip install redis
-pip install hiredis
-pip install celery
-pip install django-ratelimit
-# pip install happybase
-pip install django-debug-toolbar
-
-#echo "install pipenv"
-## install pipenv
-## https://pipenv-es.readthedocs.io/es/stable/
+echo "install pipenv"
+# install pipenv
+# https://pipenv-es.readthedocs.io/es/stable/
 #echo "cd /vagrant" >> /home/vagrant/.bashrc
 #echo 'export PATH="/home/vagrant/.local/bin:$PATH"' >> /home/vagrant/.bashrc
-#pip install pipenv
-#echo "pipenv was installed"
-
-
+pip install pipenv
+pip install --upgrade setuptools
+echo "pipenv was installed"
 # The scripts pipenv and pipenv-resolver are installed in '/home/vagrant/.local/bin' which is not on PATH.
 #   Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
 # sudo apt install software-properties-common python-software-properties
@@ -123,99 +102,56 @@ echo "command tree was installed"
 # https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#apt-repo-fresh-install
 # https://dev.mysql.com/downloads/repo/apt/
 # https://smallbusiness.chron.com/use-wget-ubuntu-52172.html
-#cd /vagrant
-wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
-#
-#
-#
-## need to install manually
-#
-## sudo dpkg -i mysql-apt-config_0.8.22-1_all.deb
-## # looks like it starts another process to deal with the selections. It doesn't block the current process. NO
-## sudo apt update
-# sudo apt update is necessary, otherwise, installation would be mysql5.7
-## # https://manpages.ubuntu.com/manpages/bionic/man8/apt.8.html
-## # sudo apt install -y mysql-server  sudo apt install mysql-server
-## sudo DEBIAN_FRONTEND=noninteractivate apt install -y mysql-server
-## # https://cppget.org/libmysqlclient
-## # sudo apt install -y libmysqlclient-dev sudo apt install libmysqlclient-dev
-## libmysqlclient-dev is necessary for django package mysqlclient
-## # https://stackoverflow.com/questions/2500436/how-does-cat-eof-work-in-bash
-## # In your case, "EOF" is known as a "Here Tag". Basically <<Here tells the shell that you are going to enter a multiline string until the "tag" Here. You can name this tag as you want, it's often EOF or STOP.
-## # 设置mysql的root账户的密码为yourpassword
-## # 创建名为twitter的数据库
-## sudo mysql -u root << EOF
-##   ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'yourpassword';
-##   flush privileges;
-##   show databases;
-##   CREATE DATABASE IF NOT EXISTS twitter;
-## EOF
-## fi
-# mysql needs to do three things:
-# 1. add localhost@%
-#mysql -u root -p
-#use mysql
-#select host,user,authentication_string from user;
-#create user 'root'@'%' identified by 'yourpassword';
-#GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
-#FLUSH PRIVILEGES;
-#drop user ‘root’@‘%’
-# 2. create twitter database
-#CREATE DATABASE IF NOT EXISTS twitter;
-# 3. change settings
-#
-## # superuser名字
-## USER="admin"
-## # superuser密码
-## PASS="admin"
-## # superuser邮箱
-## MAIL="admin@mytwitter.com"
-## script="
-## from django.contrib.auth.models import User;
-## username = '$USER';
-## password = '$PASS';
-## email = '$MAIL';
-## if not User.objects.filter(username=username).exists():
-##     User.objects.create_superuser(username, email, password);
-##     print('Superuser created.');
-## else:
-##     print('Superuser creation skipped.');
-## "
-## printf "$script" | python manage.py shell
-#
-#
-#sudo mkdir /usr/lib/jvm
-#sudo tar -zxvf shared_system_files/jdk-8u181-linux-x64.tar.gz -C /usr/lib/jvm
-#echo "JAVA_HOME=/usr/lib/jvm/jdk1.8.0_311" >> ~/.bashrc
-#echo "export JRE_HOME=$JAVA_HOME/jre" >> ~/.bashrc
-#echo "export CLASSPATH=.:$JAVA_HOME/lib:$JRE_HOME/lib" >> ~/.bashrc
-#echo "export PATH=$JAVA_HOME/bin:$PATH" >> ~/.bashrc
-#source ~/.bashrc
-#
-#tar -xzvf shared_system_files/hbase-2.4.11-bin.tar.gz
-#echo "JAVA_HOME=/usr/lib/jvm/jdk1.8.0_311" >> hbase-2.4.11/conf/hbase-env.sh
-#echo "<configuration>
-#    <property>
-#      <name>hbase.rootdir</name>
-#      <value>file:///home/testuser/hbase</value>
-#    </property>
-#    <property>
-#      <name>hbase.zookeeper.property.dataDir</name>
-#      <value>/home/testuser/zookeeper</value>
-#    </property>
-#    <property>
-#      <name>hbase.unsafe.stream.capability.enforce</name>
-#      <value>false</value>
-#    </property>
-#</configuration>" > hbase-2.4.11/conf/hbase-site.xml
 
+wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
+
+# need to install manually
+
+# sudo dpkg -i mysql-apt-config_0.8.22-1_all.deb
+# # looks like it starts another process to deal with the selections. It doesn't block the current process. NO
+# sudo apt update
+# # https://manpages.ubuntu.com/manpages/bionic/man8/apt.8.html
+# # sudo apt install -y mysql-server or
+# sudo DEBIAN_FRONTEND=noninteractivate apt install -y mysql-server
+# # https://cppget.org/libmysqlclient
+# # sudo apt install -y libmysqlclient-dev
+# libmysqlclient-dev is necessary for django package mysqlclient
+# # https://stackoverflow.com/questions/2500436/how-does-cat-eof-work-in-bash
+# # In your case, "EOF" is known as a "Here Tag". Basically <<Here tells the shell that you are going to enter a multiline string until the "tag" Here. You can name this tag as you want, it's often EOF or STOP.
+# # 设置mysql的root账户的密码为yourpassword
+# # 创建名为twitter的数据库
+# sudo mysql -u root << EOF
+#   ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'yourpassword';
+#   flush privileges;
+#   show databases;
+#   CREATE DATABASE IF NOT EXISTS twitter;
+# EOF
+# fi
+
+# # superuser名字
+# USER="admin"
+# # superuser密码
+# PASS="admin"
+# # superuser邮箱
+# MAIL="admin@mytwitter.com"
+# script="
+# from django.contrib.auth.models import User;
+# username = '$USER';
+# password = '$PASS';
+# email = '$MAIL';
+# if not User.objects.filter(username=username).exists():
+#     User.objects.create_superuser(username, email, password);
+#     print('Superuser created.');
+# else:
+#     print('Superuser creation skipped.');
+# "
+# printf "$script" | python manage.py shell
+
+# install memcached
 sudo apt install memcached
+# install redis
 sudo apt install redis
-sudo apt install nginx
-sudo pip install gunicorn
-sudo add-apt-repository ppa:git-core/ppa
-sudo apt update
-sudo apt install git
+
 echo 'All Done!'
 
 
