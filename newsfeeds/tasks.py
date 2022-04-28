@@ -6,7 +6,7 @@ from newsfeeds.services import NewsFeedService
 from utils.time_constants import ONE_HOUR
 
 
-@shared_task(routing_key='newsfeeds', time_limit=ONE_HOUR)
+@shared_task(routing_key='newsfeeds', exchange='celery', time_limit=ONE_HOUR)
 def fanout_newsfeeds_batch_task(tweet_id, total_followers_id_list, created_at):
     from newsfeeds.services import NewsFeedService
     model_class = NewsFeedService.get_model_class()
@@ -25,7 +25,7 @@ def fanout_newsfeeds_batch_task(tweet_id, total_followers_id_list, created_at):
         .format(len(current_followers_id_list), len(next_followers_id_list))
 
 
-@shared_task(routing_key='default', time_limit=ONE_HOUR)
+@shared_task(routing_key='default', exchange='celery', time_limit=ONE_HOUR)
 def fanout_newsfeeds_main_task(tweet_id, user_id, created_at):
     NewsFeedService.create_newsfeed(
         user_id=user_id, tweet_id=tweet_id, created_at=created_at
